@@ -3,20 +3,6 @@ class_name ControllableCharacterJump
 extends CharacterJump
 
 
-# If true, input processing will be enabled
-export var accept_input := false setget set_accept_input
-
-
-func set_accept_input(value: bool) -> void:
-	accept_input = value
-	set_process_input(value)
-
-
-func _ready():
-	# have to call again as calling set_process_input before _ready does nothing
-	set_accept_input(accept_input)
-
-
 func _input(event):
 	if event.is_action_pressed("jump"):
 		if character.air_time < coyote_time:

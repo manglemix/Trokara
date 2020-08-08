@@ -29,10 +29,15 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://TrokaraScripts/classic_character.gd"
 }, {
-"base": "Reference",
+"base": "CharacterJump",
 "class": "ControllableCharacterJump",
 "language": "GDScript",
 "path": "res://TrokaraScripts/controllable_character_jump.gd"
+}, {
+"base": "CharacterMovement",
+"class": "ControllableCharacterMovement",
+"language": "GDScript",
+"path": "res://TrokaraScripts/controllable_character_movement.gd"
 }, {
 "base": "KinematicArm",
 "class": "ControllableKinematicArm",
@@ -70,6 +75,7 @@ _global_script_class_icons={
 "CharacterMovement": "",
 "ClassicCharacter": "",
 "ControllableCharacterJump": "",
+"ControllableCharacterMovement": "",
 "ControllableKinematicArm": "",
 "ControllablePivot": "",
 "KinematicArm": "",

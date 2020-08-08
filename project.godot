@@ -29,10 +29,10 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://TrokaraScripts/classic_character.gd"
 }, {
-"base": "CharacterJump",
+"base": "Reference",
 "class": "ControllableCharacterJump",
 "language": "GDScript",
-"path": "res://controllable_character_jump.gd"
+"path": "res://TrokaraScripts/controllable_character_jump.gd"
 }, {
 "base": "KinematicArm",
 "class": "ControllableKinematicArm",

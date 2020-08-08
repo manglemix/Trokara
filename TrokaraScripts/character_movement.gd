@@ -21,7 +21,6 @@ export var auto_rotate_weight := 6.0	# The weight used to interpolate the rotati
 export(RotationStyles) var rotation_style := RotationStyles.FACE_MOVEMENT
 export var counter_rotate_basis := true								# Counter rotates the basis_node so that it is not affected by auto_rotate
 export var basis_node_path: NodePath = ".."							# The node which the movement vector will be relative to (modifying after _ready has no effect)
-export var accept_input := false setget set_accept_input			# If true, this node can accept user input for movement
 
 var movement_state := DEFAULT		# Corresponds to the speed that the character will move at
 var movement_vector: Vector3		# The vector towards which the character will move to, within the local space of the basis_node
@@ -30,38 +29,7 @@ onready var basis_node: Spatial = get_node(basis_node_path)		# Modify this after
 onready var character: Character = get_parent()
 
 
-func set_accept_input(value: bool) -> void:
-	accept_input = value
-	set_process_input(value)
-
-
-func _ready():
-	# has to be called again as the setter for the export var is called before _ready (which doesnt change process input)
-	set_accept_input(accept_input)
-
-
-func _input(event):
-	if event.is_action_pressed("sprint"):
-		movement_state = FAST
-	
-	elif event.is_action_pressed("walk"):
-		movement_state = SLOW
-	
-	elif event.is_action_released("sprint") and movement_state == FAST:
-		movement_state = DEFAULT
-	
-	elif event.is_action_released("walk") and movement_state == SLOW:
-		movement_state = DEFAULT
-
-
 func _process(delta):
-	if accept_input:
-		movement_vector = Vector3(
-				Input.get_action_strength("move right") - Input.get_action_strength("move left"),
-				0,
-				Input.get_action_strength("move backward") - Input.get_action_strength("move forward")
-			).normalized()
-	
 	if is_zero_approx(movement_vector.length_squared()):
 		character.movement_vector = Vector3.ZERO
 	

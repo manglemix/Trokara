@@ -12,13 +12,12 @@ func _integrate_movement(vector: Vector3, delta: float) -> Vector3:
 	if is_on_floor():
 		var new_speed := vector.length()
 		var speed := linear_velocity.length()
-		var tmp_velocity := linear_velocity
+		var tmp_velocity: Vector3
 		
-		if not is_zero_approx(new_speed):
-			# This will turn the linear_velocity such that it has the same angle of depression as the movement_vector
-			# This is so that downwaed angles are not interpolated (which would cause varying speeds when transitioning between slopes)
-			# But will still allow interpolation when the two vectors are pointing in different directions
-			tmp_velocity += vector.project(down_vector) * speed / new_speed - tmp_velocity.project(down_vector)
+		if (not is_zero_approx(new_speed)) and (not is_zero_approx(speed)):
+			# This will rotate the linear_velocity downward such that the angle between the up_vector and linear_velocity is equal to the angle of the up_vector to the movement_vector
+			# This is to help with preserving speeds when transitioning to a slope moving downwards
+			tmp_velocity = up_vector.rotated(up_vector.cross(linear_velocity).normalized(), up_vector.angle_to(vector)) * speed
 		
 		# Use acceleration_weight for speeding up, and use brake_weight for slowing down
 		if new_speed >= speed:

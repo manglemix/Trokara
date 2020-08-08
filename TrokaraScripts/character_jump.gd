@@ -18,9 +18,6 @@ export var coyote_time := 0.1
 # Allows the player to jump even if not on the ground, if the character lands within this amount of time
 export var jump_buffer := 0.1
 
-# The name of the input map which will cause the character to jump
-export var input_name := "jump"
-
 # If true, input processing will be enabled
 export var accept_input := false setget set_accept_input
 
@@ -113,7 +110,7 @@ func _ready():
 
 
 func _input(event):
-	if event.is_action_pressed(input_name):
+	if event.is_action_pressed("jump"):
 		if character.air_time < coyote_time:
 			set_jumping(true)
 		
@@ -127,7 +124,7 @@ func _input(event):
 
 
 func _physics_process(delta):
-	if _current_jump_time <= 0 or (accept_input and not Input.is_action_pressed(input_name)):
+	if _current_jump_time <= 0 or (accept_input and not Input.is_action_pressed("jump")):
 		set_jumping(false)
 	
 	_current_jump_time -= delta

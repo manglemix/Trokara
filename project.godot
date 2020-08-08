@@ -78,10 +78,6 @@ config/name="Trokara"
 run/main_scene="res://demo.tscn"
 config/icon="res://icon.png"
 
-[autoload]
-
-DotSketcher="*res://dot_sketcher.gd"
-
 [debug]
 
 settings/stdout/print_fps=true

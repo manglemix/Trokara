@@ -39,8 +39,10 @@ func _ready():
 	
 	else:
 		target_node = get_node(target_node_path)
-		_enter_tree()
 	
+	_enter_tree()
+	
+	# this line is needed to process after the target_node is done processing
 	process_priority = 1
 	
 	# setter has to be called again as it doesn't work before _ready

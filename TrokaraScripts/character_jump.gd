@@ -17,9 +17,6 @@ export var full_jump_height: float setget set_full_jump_height
 # A small period of time after falling in which you can still jump
 export var coyote_time := 0.1
 
-# Allows the player to jump even if not on the ground, if the character lands within this amount of time
-export var jump_buffer := 0.1
-
 # The velocity applied on the initial jump
 var initial_velocity: Vector3 setget set_initial_velocity
 

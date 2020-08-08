@@ -1,4 +1,6 @@
-# Adds jump functionality to the parent character, whilst providing a convenient interface for both users and AI to use
+# Adds dual jump functionality to the parent character
+# If jumping is set to true for a moment, the character will jump to the initial_jump_height
+# If jumping is set to true until the highest point of the jump, the height will be the full_jump_height
 class_name CharacterJump
 extends Node
 
@@ -17,9 +19,6 @@ export var coyote_time := 0.1
 
 # Allows the player to jump even if not on the ground, if the character lands within this amount of time
 export var jump_buffer := 0.1
-
-# If true, input processing will be enabled
-export var accept_input := false setget set_accept_input
 
 # The velocity applied on the initial jump
 var initial_velocity: Vector3 setget set_initial_velocity
@@ -67,11 +66,6 @@ func set_full_jump_height(height: float) -> void:
 	jump_time = sqrt(initial_speed_squared) / (character.gravity_acceleration - acceleration)
 
 
-func set_accept_input(value: bool) -> void:
-	accept_input = value
-	set_process_input(value)
-
-
 func set_initial_velocity(velocity: Vector3) -> void:
 	initial_velocity = velocity
 	initial_jump_height = pow(character.up_vector.dot(velocity), 2) / 2 / character.gravity_acceleration
@@ -91,40 +85,24 @@ func set_acceleration(value: float) -> void:
 
 func set_jumping(value: bool) -> void:
 	if value != jumping:
+		set_physics_process(value)
+		jumping = value
+		
 		if value:
-			emit_signal("jumped")
 			character.apply_impulse(initial_velocity)
 			_current_jump_time = jump_time
+			emit_signal("jumped")
 		
 		else:
 			emit_signal("falling")
-		
-		set_physics_process(value)
-		jumping = value
 
 
 func _ready():
-	# have to call again as calling set_process_input before _ready does nothing
-	set_accept_input(accept_input)
 	set_physics_process(false)
 
 
-func _input(event):
-	if event.is_action_pressed("jump"):
-		if character.air_time < coyote_time:
-			set_jumping(true)
-		
-		else:
-			# This is the jump buffer code
-			# If the character is in the air, wait until it lands, then check the difference in time
-			var _last_jump_query := OS.get_system_time_msecs()
-			yield(character, "landed")
-			if (OS.get_system_time_msecs() - _last_jump_query) / 1000.0 <= jump_buffer:
-				set_jumping(true)
-
-
 func _physics_process(delta):
-	if _current_jump_time <= 0 or (accept_input and not Input.is_action_pressed("jump")):
+	if _current_jump_time <= 0:
 		set_jumping(false)
 	
 	_current_jump_time -= delta

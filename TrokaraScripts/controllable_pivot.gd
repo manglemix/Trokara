@@ -8,7 +8,7 @@ export var mouse_sensitivity := 0.002
 export var invert_x := false
 export var invert_y := false
 export var turn_speed := 6.0								# used for interpolating to the target orientation
-export var accept_input := false setget set_accept_input		# If true, this node can accept user input for rotating
+export var accept_input := true setget set_accept_input		# If true, this node can accept user input for rotating
 
 var _target_transform: Transform
 

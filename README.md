@@ -11,15 +11,15 @@
 * [Contact](#contact)
 
 ## General info
-Ever wanted to make a shooter, but end up creating something buggy and not fun to play?
-Or even worse, your code looks practically like an Italian dinner, and your teammates hate you for that?
-Well you're in luck! The brunt of any FPS, TPS, platformers etc has been done for you!
-The set of scripts in TrokaraScripts is available free of any royalty, for anyone from beginners to professionals, to use
+Ever wanted to make a shooter, but end up creating something buggy and not fun to play?  
+Or even worse, your code looks practically like an Italian dinner, and your teammates hate you for that?  
+Well you're in luck! The brunt of any FPS, TPS, platformers etc has been done for you!  
+The set of scripts in TrokaraScripts is available free of any royalty, for anyone from beginners to professionals, to use  
 
-There is a demo available, with assets courtesy of mstuff
-In the demo, pressing 1 switches to FPS, whilst pressing 2 switches to TPS
-The important thing to note is that both demos use the same script for the KinematicBodies
-The only thing which is different is the cameras, the scripts for which are also available
+There is a demo available, with assets courtesy of mstuff  
+In the demo, pressing 1 switches to FPS, whilst pressing 2 switches to TPS  
+The important thing to note is that both demos use the same script for the KinematicBodies  
+The only thing which is different is the cameras, the scripts for which are also available  
 
 ## Screenshots
 ![standing screenshot](./img/standing.png)
@@ -43,9 +43,9 @@ To-do list:
 * Modular Animation Script
 
 ## Status
-Project is: _in progress_
-There are still features which can be added by others, and probably a few bugs which haven't appeared yet
-This project is completely open-source so anyone can contribute
+Project is: _in progress_  
+There are still features which can be added by others, and probably a few bugs which haven't appeared yet  
+This project is completely open-source so anyone can contribute  
 
 ## Inspiration
 It all began when my previous project, a third person platformer, went bust. A guy by the name of mstuff asked for someone to help develop a third person controller in discord. I responded, as I was kind of pleased with what I had made before, and wanted to prove it. After many weeks of coding, the final product was very different than from the failed project, yet was much better and cleaner.

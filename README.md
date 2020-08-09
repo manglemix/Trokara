@@ -22,8 +22,8 @@ The important thing to note is that both demos use the same script for the Kinem
 The only thing which is different is the cameras, the scripts for which are also available  
 
 ## Screenshots
-![standing screenshot](./img/standing.png)
-![leaping screenshot](./img/leaping.png)
+![standing screenshot](./img/standing_screenshot.png)
+![leaping screenshot](./img/leaping_screenshot.png)
 
 ## Technologies
 * GDscript - version 3.2.2

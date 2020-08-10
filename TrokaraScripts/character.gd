@@ -14,12 +14,8 @@ export var snap_distance := 0.05
 # the maximum angle of a slope which can be climbed (used in move_and_slide_with_snap)
 export var floor_max_angle_degrees := 45.0 setget set_floor_max_angle_degrees
 
-# the maximum angle before which the movement vector will be pre-rotated before being used in _integrate_movement
-export var max_slope_compensation_degrees := 45.0 setget set_max_slope_compensation_degrees
-
-# the radian counterparts
+# the radian counterpart
 var floor_max_angle := PI / 4 setget set_floor_max_angle
-var max_slope_compensation := PI / 4 setget set_max_slope_compensation
 
 var linear_velocity: Vector3
 
@@ -51,22 +47,11 @@ var _impulsing := false
 
 func set_floor_max_angle_degrees(value: float) -> void:
 	floor_max_angle_degrees = value
-	floor_max_angle = deg2rad(value)
-
-
-func set_max_slope_compensation_degrees(value: float) -> void:
-	max_slope_compensation_degrees = value
-	max_slope_compensation = deg2rad(value)
 
 
 func set_floor_max_angle(value: float) -> void:
 	floor_max_angle = value
 	floor_max_angle_degrees = rad2deg(value)
-
-
-func set_max_slope_compensation(value: float) -> void:
-	max_slope_compensation = value
-	max_slope_compensation_degrees = rad2deg(value)
 
 
 func set_gravity_factor(value: float) -> void:

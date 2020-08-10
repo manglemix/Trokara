@@ -37,6 +37,7 @@ List of features ready and TODOs for future development
 * Smarter alternative to SpringArm (KinematicArm)
 * Completely set up for inheritance and AI
 * Plenty of comments (feel free to contact me with any questions)
+* 100% GDscript; Source code fully available!
 
 To-do list:
 * Wall Running

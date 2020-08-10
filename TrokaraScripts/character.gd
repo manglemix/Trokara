@@ -86,11 +86,11 @@ func get_vertical_speed() -> float:
 	return linear_velocity.dot(up_vector)
 
 
-func test_floor(distance: float = get("collision/safe_margin")) -> KinematicCollision:
+func test_floor(distance: float = get("collision/safe_margin"), max_angle := floor_max_angle) -> KinematicCollision:
 	# Returns a KinematicCollision if there is a floor along the down_vector
 	var result := move_and_collide(down_vector * distance, true, true, true)
 	# check if the KinematicCollision exists (means there was a collision), and if the incline of the floor normal is less than the max_slope_angle
-	if is_instance_valid(result) and result.normal.angle_to(up_vector) <= floor_max_angle:
+	if is_instance_valid(result) and result.normal.angle_to(up_vector) <= max_angle:
 		return result
 	
 	return null

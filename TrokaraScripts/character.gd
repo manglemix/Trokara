@@ -98,6 +98,7 @@ func test_floor(distance: float = get("collision/safe_margin"), max_angle := flo
 
 func is_on_floor() -> bool:
 	# override the function to check floor_collision instead
+	# this is because this node doesn't use move_and_slide_with_snap
 	return is_instance_valid(floor_collision)
 
 

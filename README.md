@@ -39,7 +39,7 @@ List of features ready and TODOs for future development
 * Plenty of comments (feel free to contact me with any questions)
 * 100% GDscript; Source code fully available!
 
-To-do list:
+Features to be added (open to other contributors!):
 * Wall Running
 * Modular Animation Script
 

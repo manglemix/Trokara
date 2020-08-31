@@ -1,5 +1,7 @@
+<img width="200" height="200" src="./img/trokara_tortoise.svg">
+
 # Trokara
-> A versatile and well documented package for developing terrestrial characters
+A versatile and well documented package for developing terrestrial characters
 
 ## Table of contents
 * [General info](#general-info)

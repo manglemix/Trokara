@@ -64,10 +64,10 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://TrokaraScripts/pointing_node.gd"
 }, {
-"base": "Spatial",
+"base": "Reference",
 "class": "TransformReceiver",
 "language": "GDScript",
-"path": "res://TrokaraScripts/transform_receiver.gd"
+"path": "res://LegacyScripts/transform_receiver.gd"
 } ]
 _global_script_class_icons={
 "Character": "",

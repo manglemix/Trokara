@@ -29,12 +29,13 @@ export(int, LAYERS_3D_PHYSICS) var collision_mask := 1
 export(Array, NodePath) var _exclude_paths: Array
 
 var kinematic_body := KinematicBody.new()
+var kinematic_collision: KinematicCollision
 
 
 func _enter_tree():
 	if is_instance_valid(kinematic_body.get_parent()):
 		kinematic_body.get_parent().remove_child(kinematic_body)
-	
+
 	get_tree().current_scene.call_deferred("add_child", kinematic_body)
 
 
@@ -56,25 +57,33 @@ func _ready():
 	
 	set_physics_process(false)
 	yield(kinematic_body, "ready")
+	kinematic_body.global_transform = global_transform
 	set_physics_process(true)
 
 
 func move_kinematic(vector: Vector3) -> void:
-	# warning-ignore:return_value_discarded
-	kinematic_body.move_and_slide(vector, Vector3.ZERO, false, 4)
+	kinematic_collision = kinematic_body.move_and_collide(vector)
+
+
+func aim_at_kinematic() -> void:
+	get_parent().look_at(kinematic_body.global_transform.origin, get_parent().get_parent().global_transform.basis.y)
+	get_parent().transform *= transform.affine_inverse()
 
 
 func _physics_process(delta):
-	var destination := global_transform.basis.z * - target_length + global_transform.origin
-	var travel_vector := destination - kinematic_body.global_transform.origin
-	move_kinematic(travel_vector / delta)
+	# warning-ignore-all:return_value_discarded
+	var cast_vector := global_transform.basis.z * - target_length
+	var travel_vector := cast_vector + global_transform.origin - kinematic_body.global_transform.origin
+	move_kinematic(travel_vector)
 	
 	var new_origin := kinematic_body.global_transform.origin
 	# Checks if the KinematicBody is stretching too far
 	if new_origin.distance_to(global_transform.origin) > target_length + stretch_length:
 		kinematic_body.global_transform.origin = global_transform.origin
-		move_kinematic(destination / delta)
+		move_kinematic(cast_vector)
 		new_origin = kinematic_body.global_transform.origin
+	
+	aim_at_kinematic()
 	
 	for child in get_children():
 		# the vector from the child to the kinematic_body
@@ -82,8 +91,8 @@ func _physics_process(delta):
 		var distance_difference := child_displacement_difference.length()
 		
 		# Do not interpolate the child's position if it is sliding along the wall pointing away from the origin, or if the kinematic body is closer to the origin than the child
-		if kinematic_body.is_on_wall() and (distance_difference < 0 or (distance_difference > 0 and kinematic_body.get_slide_collision(0).normal.dot(child_displacement_difference.normalized()) > 0)):
+		if kinematic_collision and (distance_difference < 0 or (distance_difference > 0 and kinematic_collision.normal.dot(child_displacement_difference.normalized()) > 0)):
 			child.global_transform.origin = new_origin
-		
+
 		else:
 			child.global_transform.origin = child.global_transform.origin.linear_interpolate(new_origin, weight * delta)

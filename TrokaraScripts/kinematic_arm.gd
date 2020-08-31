@@ -60,6 +60,7 @@ func _ready():
 
 
 func move_kinematic(vector: Vector3) -> void:
+	# warning-ignore:return_value_discarded
 	kinematic_body.move_and_slide(vector, Vector3.ZERO, false, 4)
 
 

@@ -49,7 +49,7 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://TrokaraScripts/controllable_pivot.gd"
 }, {
-"base": "Reference",
+"base": "Spatial",
 "class": "KinematicArm",
 "language": "GDScript",
 "path": "res://TrokaraScripts/kinematic_arm.gd"

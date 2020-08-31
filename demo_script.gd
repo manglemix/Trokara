@@ -25,4 +25,5 @@ func _input(event):
 	elif event.is_action_pressed("ui_focus_next"):
 		var img := get_viewport().get_texture().get_data()
 		img.flip_y()
+		# warning-ignore:return_value_discarded
 		img.save_png("screenshot.png")

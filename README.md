@@ -18,6 +18,10 @@ Or even worse, your code looks practically like an Italian dinner, and your team
 Well you're in luck! The brunt of any FPS, TPS, platformers etc has been done for you! \
 The set of scripts in TrokaraScripts is available free of any royalty, for anyone from beginners to professionals, to use
 
+Aspects such as physics, user input, and camera rigging have all been implemented already! \
+The code also closely follows the GDscript Design Principles, and the SOLID Design Principles \
+As such, all the scripts should be easily inheritable for AI, or extra functionality
+
 There is a demo available, with assets courtesy of mstuff \
 In the demo, pressing 1 switches to FPS, whilst pressing 2 switches to TPS \
 The important thing to note is that both demos use the same script for the KinematicBodies \

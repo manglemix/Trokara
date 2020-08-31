@@ -150,13 +150,12 @@ func _physics_process(delta: float):
 			if vertical_speed < 0:
 				linear_velocity -= vertical_speed * up_vector
 	
-	# a copy of the movement vector, which may be rotated if we are on a slope
-	var tmp_vector := movement_vector
+	linear_velocity = _integrate_movement(movement_vector, delta)
 	
 	if is_on_floor():
-		if not is_zero_approx(tmp_vector.length_squared()):
-			# this will rotate the movement_vector such that is still on the plane on which the up_vector and movement_vector lie on, but also along the floor plane
-			tmp_vector = up_vector.cross(tmp_vector).cross(floor_collision.normal).normalized() * tmp_vector.length()
+		# this will rotate the linear_velocity such that it is along the floor plane
+		# this will prevent speed loss due to sliding, and will allow the character to run down slopes
+		linear_velocity = up_vector.cross(linear_velocity).cross(floor_collision.normal).normalized() * linear_velocity.length()
 		
 	else:
 		air_time += delta
@@ -166,7 +165,6 @@ func _physics_process(delta: float):
 			_impulsing = false
 			snap_to_floor = true
 	
-	linear_velocity = _integrate_movement(tmp_vector, delta)
 	# I stayed away from move_and_slide_and_snap as it caused this node to slide down slopes even if stop on slope was true (and there was downward velocity)
 	# and for some reason had a bug when nearing the max floor angle, which caused this node to randomly shoot upwards at high speeds
 	# also, if there was any side to side movement on a slope, move_and_slide_and_snap would cause this node to drift downards

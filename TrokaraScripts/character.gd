@@ -140,19 +140,20 @@ func _physics_process(delta: float):
 			
 			if is_on_floor():
 				global_transform.origin += floor_collision.travel
-	
-	# a copy of the movement vector, which may be rotated if we are on a slope
-	var tmp_vector := movement_vector
-	
-	if is_on_floor():
-		if air_time > 0:
+		
+		if is_on_floor() and air_time > 0:
+			# This code is here and not in the other if statement below because the "landed" signal may call functions which can delete floor_collision (for impulsing)
 			air_time = 0
 			emit_signal("landed", vertical_speed)
 			
 			# remove any downward vertical speed so that we don't slam down onto slopes after snapping
 			if vertical_speed < 0:
 				linear_velocity -= vertical_speed * up_vector
-		
+	
+	# a copy of the movement vector, which may be rotated if we are on a slope
+	var tmp_vector := movement_vector
+	
+	if is_on_floor():
 		if not is_zero_approx(tmp_vector.length_squared()):
 			# this will rotate the movement_vector such that is still on the plane on which the up_vector and movement_vector lie on, but also along the floor plane
 			tmp_vector = up_vector.cross(tmp_vector).cross(floor_collision.normal).normalized() * tmp_vector.length()

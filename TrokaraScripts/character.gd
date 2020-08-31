@@ -131,19 +131,19 @@ func _physics_process(delta: float):
 		# we can't just cast the shape as far as the snap distance, as it tends to overshoot if this node is directly on the floor
 		# the overshooting will cause an overcompensation when snapping, causing sliding on slopes
 		floor_collision = test_floor()
+		var vertical_speed := get_vertical_speed()
 		
 		if floor_collision:
 			if air_time > 0:
 				air_time = 0
-				emit_signal("landed", get_vertical_speed())
+				emit_signal("landed", vertical_speed)
 		
-		elif snap_to_floor:
+		elif snap_to_floor and vertical_speed * delta > - snap_distance:
 			# this section of code checks if the floor is within distance, and will try to move this node onto it
 			floor_collision = test_floor(snap_distance)
 			if floor_collision:
 				global_transform.origin += floor_collision.travel
 				
-				var vertical_speed := get_vertical_speed()
 				if air_time > 0:
 					air_time = 0
 					emit_signal("landed", vertical_speed)

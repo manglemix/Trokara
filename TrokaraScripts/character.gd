@@ -113,7 +113,7 @@ func apply_impulse(velocity: Vector3) -> void:
 	linear_velocity += velocity
 
 
-func _integrate_movement(vector: Vector3, delta: float) -> Vector3:
+func _integrate_movement(vector: Vector3, _delta: float) -> Vector3:
 	# transforms the vector given according to some algorithm
 	# this is mainly used to determine how the movement_vector affects the linear_velocity
 	# right now this will only allow the character to move when it is on the ground

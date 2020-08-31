@@ -133,7 +133,7 @@ func _physics_process(delta: float):
 		floor_collision = test_floor()
 		var vertical_speed := get_vertical_speed()
 		
-		if floor_collision:
+		if is_on_floor():
 			if air_time > 0:
 				air_time = 0
 				emit_signal("landed", vertical_speed)

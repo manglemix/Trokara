@@ -64,10 +64,15 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://TrokaraScripts/pointing_node.gd"
 }, {
-"base": "Reference",
+"base": "Spatial",
 "class": "TransformReceiver",
 "language": "GDScript",
 "path": "res://LegacyScripts/transform_receiver.gd"
+}, {
+"base": "Control",
+"class": "VelocityMeter",
+"language": "GDScript",
+"path": "res://velocitymeter.gd"
 } ]
 _global_script_class_icons={
 "Character": "",
@@ -81,7 +86,8 @@ _global_script_class_icons={
 "KinematicArm": "",
 "PivotPoint": "",
 "PointingNode": "",
-"TransformReceiver": ""
+"TransformReceiver": "",
+"VelocityMeter": ""
 }
 
 [application]

@@ -16,6 +16,7 @@ onready var jump_controller: CharacterJump = get_node(jump_controller_path)
 
 
 func _ready():
+	# warning-ignore-all:return_value_discarded
 	jump_controller.connect("jumped", self, "handle_jump")
 	character.connect("landed", self, "handle_landing")
 

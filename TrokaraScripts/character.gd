@@ -86,6 +86,16 @@ func get_vertical_speed() -> float:
 	return linear_velocity.dot(up_vector)
 
 
+func align_to_floor(vector: Vector3) -> Vector3:
+	# this will rotate the vector given on the plane formed by the vector and the up vector, such that the vector is along the floor plane
+	# returns vector if not on floor
+	if is_on_floor():
+		return up_vector.cross(vector).cross(floor_collision.normal).normalized() * vector.length()
+	
+	else:
+		return vector
+
+
 func test_floor(distance: float = get("collision/safe_margin"), max_angle := floor_max_angle) -> KinematicCollision:
 	# Returns a KinematicCollision if there is a floor along the down_vector
 	var result := move_and_collide(down_vector * distance, true, true, true)
@@ -153,9 +163,8 @@ func _physics_process(delta: float):
 	linear_velocity = _integrate_movement(movement_vector, delta)
 	
 	if is_on_floor():
-		# this will rotate the linear_velocity such that it is along the floor plane
 		# this will prevent speed loss due to sliding, and will allow the character to run down slopes
-		linear_velocity = up_vector.cross(linear_velocity).cross(floor_collision.normal).normalized() * linear_velocity.length()
+		linear_velocity = align_to_floor(linear_velocity)
 		
 	else:
 		air_time += delta

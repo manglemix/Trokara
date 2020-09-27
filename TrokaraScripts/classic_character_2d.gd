@@ -1,14 +1,14 @@
 # EXtends the character script to have more natural movement through interpolation
 # Also adds air strafing, which limits the air speed so there is no net acceleration
-class_name ClassicCharacter
-extends Character
+class_name ClassicCharacter2D
+extends Character2D
 
 
 export var acceleration_weight := 12.0		# weight used to interpolate velocity to the movement vector
 export var brake_weight := 18.0				# weight used to interpolate velocity to 0
 
 
-func _integrate_movement(vector: Vector3, delta: float) -> Vector3:
+func _integrate_movement(vector: Vector2, delta: float) -> Vector2:
 	if is_on_floor():
 		var new_speed := vector.length()
 		var speed := linear_velocity.length()

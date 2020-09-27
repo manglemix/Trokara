@@ -18,7 +18,7 @@ export var full_jump_height: float setget set_full_jump_height
 export var coyote_time := 0.1
 
 # The velocity applied on the initial jump
-var initial_velocity: Vector3 setget set_initial_velocity
+var initial_velocity setget set_initial_velocity
 
 # The duration of the "hold" jump
 # The end of this time should be when the vertical velocity is zero
@@ -33,7 +33,7 @@ var jumping := false setget set_jumping
 # How much time there is left for the full jump
 var _current_jump_time: float
 
-onready var character: Character = get_parent()
+onready var character := get_parent()
 
 
 func set_initial_jump_height(height: float) -> void:
@@ -42,9 +42,10 @@ func set_initial_jump_height(height: float) -> void:
 	
 	initial_jump_height = height
 	# sets the new initial_velocity to be the same direction as the last initial_velocity
-	if is_zero_approx(initial_velocity.length_squared()):
+	if initial_velocity == null or is_zero_approx(initial_velocity.length_squared()):
 		# If the initial_velocity is empty (all values are 0), then a new vector pointing straight up
 		initial_velocity = character.up_vector * sqrt(2 * character.gravity_acceleration * height)
+		
 	else:
 		# scales the last initial_velocity according to its vertical component
 		initial_velocity *= sqrt(2 * character.gravity_acceleration * height) / character.up_vector.dot(initial_velocity)
@@ -63,7 +64,7 @@ func set_full_jump_height(height: float) -> void:
 	jump_time = sqrt(initial_speed_squared) / (character.gravity_acceleration - acceleration)
 
 
-func set_initial_velocity(velocity: Vector3) -> void:
+func set_initial_velocity(velocity: Vector2) -> void:
 	initial_velocity = velocity
 	initial_jump_height = pow(character.up_vector.dot(velocity), 2) / 2 / character.gravity_acceleration
 

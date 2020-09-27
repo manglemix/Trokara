@@ -1,6 +1,6 @@
 # A version of CharacterMovement which can accept user input
 class_name ControllableCharacterMovement2D
-extends CharacterMovement
+extends CharacterMovement2D
 
 
 func _input(event):

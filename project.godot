@@ -9,10 +9,20 @@
 config_version=4
 
 _global_script_classes=[ {
+"base": "AnimationTree",
+"class": "BasicAnimator",
+"language": "GDScript",
+"path": "res://TrokaraScripts/AnimationTrees/basic_animator.gd"
+}, {
 "base": "KinematicBody",
 "class": "Character",
 "language": "GDScript",
 "path": "res://TrokaraScripts/character.gd"
+}, {
+"base": "KinematicBody2D",
+"class": "Character2D",
+"language": "GDScript",
+"path": "res://TrokaraScripts/character2d.gd"
 }, {
 "base": "Node",
 "class": "CharacterJump",
@@ -24,10 +34,20 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://TrokaraScripts/character_movement.gd"
 }, {
+"base": "Node",
+"class": "CharacterMovement2D",
+"language": "GDScript",
+"path": "res://TrokaraScripts/character_movement_2d.gd"
+}, {
 "base": "Character",
 "class": "ClassicCharacter",
 "language": "GDScript",
 "path": "res://TrokaraScripts/classic_character.gd"
+}, {
+"base": "Character2D",
+"class": "ClassicCharacter2D",
+"language": "GDScript",
+"path": "res://TrokaraScripts/classic_character_2d.gd"
 }, {
 "base": "CharacterJump",
 "class": "ControllableCharacterJump",
@@ -38,6 +58,11 @@ _global_script_classes=[ {
 "class": "ControllableCharacterMovement",
 "language": "GDScript",
 "path": "res://TrokaraScripts/controllable_character_movement.gd"
+}, {
+"base": "CharacterMovement2D",
+"class": "ControllableCharacterMovement2D",
+"language": "GDScript",
+"path": "res://TrokaraScripts/controllable_character_movement_2d.gd"
 }, {
 "base": "KinematicArm",
 "class": "ControllableKinematicArm",
@@ -53,6 +78,11 @@ _global_script_classes=[ {
 "class": "KinematicArm",
 "language": "GDScript",
 "path": "res://TrokaraScripts/kinematic_arm.gd"
+}, {
+"base": "ControllableCharacterJump",
+"class": "MultiJump",
+"language": "GDScript",
+"path": "res://TrokaraScripts/multi_jump.gd"
 }, {
 "base": "Spatial",
 "class": "PivotPoint",
@@ -75,15 +105,21 @@ _global_script_classes=[ {
 "path": "res://velocitymeter.gd"
 } ]
 _global_script_class_icons={
+"BasicAnimator": "",
 "Character": "",
+"Character2D": "",
 "CharacterJump": "",
 "CharacterMovement": "",
+"CharacterMovement2D": "",
 "ClassicCharacter": "",
+"ClassicCharacter2D": "",
 "ControllableCharacterJump": "",
 "ControllableCharacterMovement": "",
+"ControllableCharacterMovement2D": "",
 "ControllableKinematicArm": "",
 "ControllablePivot": "",
 "KinematicArm": "",
+"MultiJump": "",
 "PivotPoint": "",
 "PointingNode": "",
 "TransformReceiver": "",

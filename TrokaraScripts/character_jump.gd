@@ -86,8 +86,13 @@ func set_jumping(value: bool) -> void:
 		set_physics_process(value)
 		jumping = value
 		
+		var impulse = initial_velocity
+		
+		if character.get_vertical_speed() < 0:
+			impulse -= character.linear_velocity.project(character.up_vector)
+		
 		if value:
-			character.apply_impulse(initial_velocity)
+			character.apply_impulse(impulse)
 			_current_jump_time = jump_time
 			emit_signal("jumped")
 		

@@ -64,7 +64,7 @@ func set_full_jump_height(height: float) -> void:
 	jump_time = sqrt(initial_speed_squared) / (character.gravity_acceleration - acceleration)
 
 
-func set_initial_velocity(velocity: Vector2) -> void:
+func set_initial_velocity(velocity)-> void:
 	initial_velocity = velocity
 	initial_jump_height = pow(character.up_vector.dot(velocity), 2) / 2 / character.gravity_acceleration
 

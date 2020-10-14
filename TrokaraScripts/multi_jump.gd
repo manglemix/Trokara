@@ -9,7 +9,7 @@ export var extra_jumps := 2
 onready var jumps := extra_jumps
 
 
-func reset_jumps(vertical_speed) -> void:
+func reset_jumps(_vertical_speed) -> void:
 	jumps = extra_jumps
 	emit_signal("_reset")
 

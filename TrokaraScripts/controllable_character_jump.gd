@@ -9,7 +9,7 @@ export var jump_buffer := 0.1
 
 func _input(event):
 	if event.is_action_pressed("jump"):
-		if character.air_time < coyote_time:
+		if current_jumps > 0:
 			set_jumping(true)
 	
 		else:

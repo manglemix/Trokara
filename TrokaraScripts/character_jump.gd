@@ -88,8 +88,10 @@ func set_acceleration(value: float) -> void:
 
 
 func set_jumping(value: bool) -> void:
-	if value != jumping and (current_jumps > 0 or character.air_time < coyote_time):
-		current_jumps -= 1
+	if value != jumping and current_jumps > 0:
+		if value:
+			current_jumps -= 1
+		
 		set_physics_process(value)
 		jumping = value
 		
@@ -120,5 +122,5 @@ func _physics_process(delta):
 	character.linear_velocity += character.up_vector * acceleration * delta
 
 
-func _reset_jumps() -> void:
+func _reset_jumps(_vertical_speed) -> void:
 	current_jumps = max_jumps

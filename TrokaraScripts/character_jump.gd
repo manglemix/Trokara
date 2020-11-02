@@ -14,6 +14,9 @@ export var initial_jump_height: float setget set_initial_jump_height
 # The maximum height of the jump if the spacebar is held down all the way (aka the "hold" jump)
 export var full_jump_height: float setget set_full_jump_height
 
+# The max number of jumps that can occur before needing to land
+export var max_jumps := 1
+
 # A small period of time after falling in which you can still jump
 export var coyote_time := 0.1
 
@@ -29,6 +32,9 @@ var acceleration: float setget set_acceleration
 
 # if set from false to true, the character will jump, otherwise it will stop any acceleration and begin falling
 var jumping := false setget set_jumping
+
+# current number of jumps
+var current_jumps := 0
 
 # How much time there is left for the full jump
 var _current_jump_time: float
@@ -82,7 +88,8 @@ func set_acceleration(value: float) -> void:
 
 
 func set_jumping(value: bool) -> void:
-	if value != jumping:
+	if value != jumping and (current_jumps > 0 or character.air_time < coyote_time):
+		current_jumps -= 1
 		set_physics_process(value)
 		jumping = value
 		
@@ -102,6 +109,7 @@ func set_jumping(value: bool) -> void:
 
 func _ready():
 	set_physics_process(false)
+	character.connect("landed", self, "_reset_jumps")
 
 
 func _physics_process(delta):
@@ -110,3 +118,7 @@ func _physics_process(delta):
 	
 	_current_jump_time -= delta
 	character.linear_velocity += character.up_vector * acceleration * delta
+
+
+func _reset_jumps() -> void:
+	current_jumps = max_jumps

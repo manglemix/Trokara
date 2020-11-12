@@ -14,8 +14,8 @@ export var initial_jump_height: float setget set_initial_jump_height
 # The maximum height of the jump if the spacebar is held down all the way (aka the "hold" jump)
 export var full_jump_height: float setget set_full_jump_height
 
-# The max number of jumps that can occur before needing to land, inclusive of the first jump from land
-export var max_jumps := 1
+# The number of jumps possible in the air
+export var extra_jumps := 1
 
 # A small period of time after falling in which you can still jump
 export var coyote_time := 0.1
@@ -96,8 +96,10 @@ func set_acceleration(value: float) -> void:
 
 func set_jumping(value: bool) -> void:
 	if value:
-		if current_jumps > 0:
-			current_jumps -= 1
+		if character.is_on_flor() or current_jumps > 0:
+			if not character.is_on_floor():
+				current_jumps -= 1
+			
 			var impulse
 			if deform_to_movement and not character.is_on_floor():
 				# The impulse vector consists of the initial_velocity added with the flattened movement_vector
@@ -128,6 +130,7 @@ func set_jumping(value: bool) -> void:
 
 
 func _ready():
+	# warning-ignore:return_value_discarded
 	set_physics_process(false)
 	character.connect("landed", self, "_reset_jumps")
 
@@ -158,4 +161,4 @@ func jump_to(height: float) -> void:
 
 
 func _reset_jumps(_vertical_speed) -> void:
-	current_jumps = max_jumps
+	current_jumps = extra_jumps

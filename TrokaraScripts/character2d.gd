@@ -144,7 +144,7 @@ func _physics_process(delta: float):
 		# the overshooting will cause an overcompensation when snapping, causing sliding on slopes
 		floor_collision = test_floor()
 		
-		if not is_on_floor() and snap_to_floor and vertical_speed * delta > - snap_distance:
+		if snap_to_floor and (not is_on_floor()) and vertical_speed * delta > - snap_distance:
 			# this section of code checks if the floor is within distance, and will try to move this node onto it
 			floor_collision = test_floor(snap_distance)
 			

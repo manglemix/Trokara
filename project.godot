@@ -79,11 +79,6 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://TrokaraScripts/kinematic_arm.gd"
 }, {
-"base": "ControllableCharacterJump",
-"class": "MultiJump",
-"language": "GDScript",
-"path": "res://TrokaraScripts/multi_jump.gd"
-}, {
 "base": "Spatial",
 "class": "PivotPoint",
 "language": "GDScript",
@@ -119,7 +114,6 @@ _global_script_class_icons={
 "ControllableKinematicArm": "",
 "ControllablePivot": "",
 "KinematicArm": "",
-"MultiJump": "",
 "PivotPoint": "",
 "PointingNode": "",
 "TransformReceiver": "",

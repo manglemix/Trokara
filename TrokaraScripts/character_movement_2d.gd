@@ -11,7 +11,6 @@ enum MovementStates {DEFAULT, SLOW, FAST}
 export var fast_speed := 10.0
 export var default_speed := 5.0
 export var slow_speed := 2.5
-export var air_speed := 5.0				# The speed when air strafing
 export(MovementStates) var movement_state := MovementStates.DEFAULT	# Corresponds to the speed that the character will move at
 export var auto_rotate := true			# If true, the body_node will be flipped to according to rotation_style
 
@@ -42,19 +41,15 @@ func _ready():
 func _process(_delta):
 	var tmp_vector = basis_node.to_global(movement_vector) - basis_node.global_transform.origin
 	
-	if character.is_on_floor():
-		match movement_state:
-			MovementStates.FAST:
-				tmp_vector *= fast_speed
-			
-			MovementStates.SLOW:
-				tmp_vector *= slow_speed
-			
-			_:
-				tmp_vector *= default_speed
-	
-	else:
-		tmp_vector *= air_speed
+	match movement_state:
+		MovementStates.FAST:
+			tmp_vector *= fast_speed
+		
+		MovementStates.SLOW:
+			tmp_vector *= slow_speed
+		
+		_:
+			tmp_vector *= default_speed
 	
 	character.movement_vector = tmp_vector
 	

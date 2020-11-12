@@ -11,7 +11,6 @@ enum {DEFAULT, SLOW, FAST}
 export var sprint_speed := 10.0
 export var default_speed := 5.0
 export var walk_speed := 2.5
-export var air_speed := 5.0				# The speed when air strafing
 export var auto_rotate := true			# If true, the character will rotate according to the rotation_style when moving
 export var auto_rotate_weight := 6.0	# The weight used to interpolate the rotation of the character
 
@@ -36,19 +35,15 @@ func _process(delta):
 	else:
 		var tmp_vector := basis_node.global_transform.basis.xform(movement_vector)
 		
-		if character.is_on_floor():
-			match movement_state:
-				FAST:
-					tmp_vector *= sprint_speed
-				
-				SLOW:
-					tmp_vector *= walk_speed
-				
-				_:
-					tmp_vector *= default_speed
-		
-		else:
-			tmp_vector *= air_speed
+		match movement_state:
+			FAST:
+				tmp_vector *= sprint_speed
+			
+			SLOW:
+				tmp_vector *= walk_speed
+			
+			_:
+				tmp_vector *= default_speed
 		
 		character.movement_vector = tmp_vector
 		

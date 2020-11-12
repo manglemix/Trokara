@@ -20,11 +20,11 @@ func _input(event):
 			if (OS.get_system_time_msecs() - _last_jump_query) / 1000.0 <= jump_buffer:
 				set_jumping(true)
 				yield(self, "jumped")
-
+	
 				# Immediately cancel the jump if the spacebar is not pressed
 				# which is possible if the spacebar was released before the floor was hit
 				if not Input.is_action_pressed("jump"):
 					set_jumping(false)
-
+	
 	elif event.is_action_released("jump"):
 		set_jumping(false)

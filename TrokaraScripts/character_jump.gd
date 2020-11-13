@@ -96,7 +96,7 @@ func set_acceleration(value: float) -> void:
 
 func set_jumping(value: bool) -> void:
 	if value:
-		if character.is_on_flor() or current_jumps > 0:
+		if character.is_on_floor() or current_jumps > 0:
 			if not character.is_on_floor():
 				current_jumps -= 1
 			

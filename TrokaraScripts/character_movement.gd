@@ -29,35 +29,31 @@ onready var character: Character = get_parent()
 
 
 func _process(delta):
-	if is_zero_approx(movement_vector.length_squared()):
-		character.movement_vector = Vector3.ZERO
+	var tmp_vector := basis_node.global_transform.basis.xform(movement_vector)
 	
-	else:
-		var tmp_vector := basis_node.global_transform.basis.xform(movement_vector)
+	match movement_state:
+		FAST:
+			tmp_vector *= sprint_speed
 		
-		match movement_state:
-			FAST:
-				tmp_vector *= sprint_speed
-			
-			SLOW:
-				tmp_vector *= walk_speed
-			
-			_:
-				tmp_vector *= default_speed
+		SLOW:
+			tmp_vector *= walk_speed
 		
-		character.movement_vector = tmp_vector
+		_:
+			tmp_vector *= default_speed
+	
+	character.movement_vector = tmp_vector
+	
+	if auto_rotate:
+		var original_basis: Basis
+		if counter_rotate_basis:
+			original_basis = basis_node.global_transform.basis
 		
-		if auto_rotate:
-			var original_basis: Basis
-			if counter_rotate_basis:
-				original_basis = basis_node.global_transform.basis
-			
-			if rotation_style == RotationStyles.COPY_BASIS:
-				tmp_vector = - basis_node.global_transform.basis.z
-			
-			tmp_vector -= tmp_vector.project(character.global_transform.basis.y)	# flatten the tmp_vector
-			var target_transform := character.global_transform.looking_at(tmp_vector + character.global_transform.origin, character.global_transform.basis.y)
-			character.global_transform = character.global_transform.interpolate_with(target_transform, auto_rotate_weight * delta)
-			
-			if counter_rotate_basis:
-				basis_node.global_transform.basis = original_basis
+		if rotation_style == RotationStyles.COPY_BASIS:
+			tmp_vector = - basis_node.global_transform.basis.z
+		
+		tmp_vector -= tmp_vector.project(character.global_transform.basis.y)	# flatten the tmp_vector
+		var target_transform := character.global_transform.looking_at(tmp_vector + character.global_transform.origin, character.global_transform.basis.y)
+		character.global_transform = character.global_transform.interpolate_with(target_transform, auto_rotate_weight * delta)
+		
+		if counter_rotate_basis:
+			basis_node.global_transform.basis = original_basis

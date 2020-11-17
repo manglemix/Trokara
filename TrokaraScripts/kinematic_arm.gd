@@ -1,98 +1,111 @@
-# An alternative to SpringArm which uses a KinematicBody that can slide along walls
-# This node will project a KinematicBody along the - z vector, and set this nodes children to follow it
-# The KinematicBody will be able to move around obstacles which occlude the origin, but not the destination
-# This is in contrast to the SpringArm, which will retract even if there is nothing blocking the destination
-# This achieves a more natural movement more suitable for cameras in Third Person shooters
 class_name KinematicArm
 extends Spatial
 
 
-# The distance from the origin which the KinematicBody will try to reach
+export var collider_shape: Shape setget set_collider_shape
+export var current_length := 5.0
+export var min_length := 0.0
 export var target_length := 5.0
-
-# When the KinematicBody gets stuck, it will be allowed to stretch further from the origin up to this length
-# Once surpassed, the KinematicBody will be teleported back to the origin and re-cast
-export var stretch_length := 1.0
-
-# There is built-in interpolation to smoothen harsh movements
-export var weight := 12.0
-
-# The shape used by the KinematicBody
-export var shape: Shape
-
-# The collision mask of the KinematicBody
-export(int, LAYERS_3D_PHYSICS) var collision_mask := 1
-
-# The nodes which the KinematicBody won't collide with
-# Do not append to this array after _ready as it won't do anything
-# Instead, use kinematic_body.add_collision_exception_with(body)
+export var weight := 10.0
+export var max_slope_angle_degrees := 45.0 setget set_max_slope_angle_degrees
 export(Array, NodePath) var _exclude_paths: Array
+export(int, LAYERS_3D_PHYSICS) var collision_mask := 1 setget set_collision_mask
 
-var kinematic_body := KinematicBody.new()
-var kinematic_collision: KinematicCollision
+var kinematic_body: KinematicBody
+var max_slope_angle := PI / 4 setget set_max_slope_angle
+
+
+func set_max_slope_angle_degrees(value: float) -> void:
+	max_slope_angle_degrees = value
+	max_slope_angle = deg2rad(value)
+
+
+func set_max_slope_angle(value: float) -> void:
+	max_slope_angle = value
+	max_slope_angle_degrees = rad2deg(value)
+
+
+func set_collider_shape(shape: Shape) -> void:
+	collider_shape = shape
+	
+	if is_instance_valid(kinematic_body):
+		if kinematic_body.get_child_count() > 0:
+			kinematic_body.get_child(0).queue_free()
+		
+		var collision_shape := CollisionShape.new()
+		collision_shape.shape = shape
+		kinematic_body.add_child(collision_shape)
+
+
+func set_collision_mask(mask: int) -> void:
+	collision_mask = mask
+	
+	if is_instance_valid(kinematic_body):
+		kinematic_body.collision_mask = mask
 
 
 func _enter_tree():
-	if is_instance_valid(kinematic_body.get_parent()):
-		kinematic_body.get_parent().remove_child(kinematic_body)
-
-	get_tree().current_scene.call_deferred("add_child", kinematic_body)
-
-
-func _exit_tree():
-	kinematic_body.get_parent().call_deferred("remove_child", kinematic_body)
-
-
-func _ready():
+	kinematic_body = KinematicBody.new()
 	kinematic_body.collision_layer = 0
 	kinematic_body.collision_mask = collision_mask
-	kinematic_body.name = name + "Assistant"
+	set_collider_shape(collider_shape)
+	kinematic_body.name = name + "KinematicBody"
 	
 	for path in _exclude_paths:
 		kinematic_body.add_collision_exception_with(get_node(path))
 	
-	var collision_shape := CollisionShape.new()
-	collision_shape.shape = shape
-	kinematic_body.add_child(collision_shape)
-	
-	set_physics_process(false)
+	get_tree().current_scene.call_deferred("add_child", kinematic_body)
 	yield(kinematic_body, "ready")
-	kinematic_body.global_transform = global_transform
 	set_physics_process(true)
 
 
-func move_kinematic(vector: Vector3) -> void:
-	kinematic_collision = kinematic_body.move_and_collide(vector)
+func _exit_tree():
+	kinematic_body.queue_free()
+	set_physics_process(false)
 
 
-func aim_at_kinematic() -> void:
-	get_parent().look_at(kinematic_body.global_transform.origin, get_parent().get_parent().global_transform.basis.y)
-	get_parent().transform *= transform.affine_inverse()
+func _ready():
+	set_physics_process(false)
 
 
 func _physics_process(delta):
-	# warning-ignore-all:return_value_discarded
-	var cast_vector := global_transform.basis.z * - target_length
-	var travel_vector := cast_vector + global_transform.origin - kinematic_body.global_transform.origin
-	move_kinematic(travel_vector)
+	# warning-ignore:return_value_discarded
+	var collision_info := _move_kinematic_body()
 	
-	var new_origin := kinematic_body.global_transform.origin
-	# Checks if the KinematicBody is stretching too far
-	if new_origin.distance_to(global_transform.origin) > target_length + stretch_length:
-		kinematic_body.global_transform.origin = global_transform.origin
-		move_kinematic(cast_vector)
-		new_origin = kinematic_body.global_transform.origin
-	
-	aim_at_kinematic()
-	
-	for child in get_children():
-		# the vector from the child to the kinematic_body
-		var child_displacement_difference: Vector3 = new_origin - child.global_transform.origin
-		var distance_difference := child_displacement_difference.length()
+	if is_instance_valid(collision_info):
+		if collision_info.normal.angle_to(- global_transform.basis.z) <= max_slope_angle:
+			_reset_kinematic_body()
 		
-		# Do not interpolate the child's position if it is sliding along the wall pointing away from the origin, or if the kinematic body is closer to the origin than the child
-		if kinematic_collision and (distance_difference < 0 or (distance_difference > 0 and kinematic_collision.normal.dot(child_displacement_difference.normalized()) > 0)):
-			child.global_transform.origin = new_origin
-
 		else:
-			child.global_transform.origin = child.global_transform.origin.linear_interpolate(new_origin, weight * delta)
+			var relative_origin := global_transform.origin - kinematic_body.global_transform.origin
+			var arm_vector := - global_transform.basis.z * current_length
+			var perpendicular_vector_length := arm_vector.dot(collision_info.normal)
+			var perpendicular_distance := collision_info.normal.dot(relative_origin)
+			var ratio := abs(perpendicular_distance / perpendicular_vector_length)
+			var correction_vector := arm_vector.slide(collision_info.normal) * ratio + relative_origin.slide(collision_info.normal)
+			
+			if correction_vector.dot(arm_vector) > 0:
+				_reset_kinematic_body()
+			
+			else:
+				kinematic_body.move_and_collide(correction_vector)
+				current_length = arm_vector.length() * ratio
+				_update_children()
+	
+	else:
+		current_length = lerp(current_length, target_length, weight * delta)
+		_update_children()
+
+
+func _update_children() -> void:
+	var target := kinematic_body.global_transform.origin
+	for child in get_children():
+		child.global_transform.origin = target
+
+
+func _move_kinematic_body(length:=current_length) -> KinematicCollision:
+	return kinematic_body.move_and_collide(- global_transform.basis.z * length + global_transform.origin - kinematic_body.global_transform.origin)
+
+
+func _reset_kinematic_body() -> void:
+	kinematic_body.global_transform.origin = - global_transform.basis.z * min_length + global_transform.origin

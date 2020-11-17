@@ -64,11 +64,6 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://TrokaraScripts/controllable_character_movement_2d.gd"
 }, {
-"base": "KinematicArm",
-"class": "ControllableKinematicArm",
-"language": "GDScript",
-"path": "res://TrokaraScripts/controllable_kinematic_arm.gd"
-}, {
 "base": "PivotPoint",
 "class": "ControllablePivot",
 "language": "GDScript",
@@ -88,6 +83,11 @@ _global_script_classes=[ {
 "class": "PointingNode",
 "language": "GDScript",
 "path": "res://TrokaraScripts/pointing_node.gd"
+}, {
+"base": "KinematicArm",
+"class": "ScrollableKinematicArm",
+"language": "GDScript",
+"path": "res://TrokaraScripts/scrollable_kinematic_arm.gd"
 }, {
 "base": "Spatial",
 "class": "TransformReceiver",
@@ -111,11 +111,11 @@ _global_script_class_icons={
 "ControllableCharacterJump": "",
 "ControllableCharacterMovement": "",
 "ControllableCharacterMovement2D": "",
-"ControllableKinematicArm": "",
 "ControllablePivot": "",
 "KinematicArm": "",
 "PivotPoint": "",
 "PointingNode": "",
+"ScrollableKinematicArm": "",
 "TransformReceiver": "",
 "VelocityMeter": ""
 }

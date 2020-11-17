@@ -45,6 +45,11 @@ var current_jumps := 0
 # How much time there is left for the full jump
 var _current_jump_time: float
 
+# True if the character jumped off the floor, until the character lands
+# needed to prevent the character from jumping multiple times within the coyote time
+var _initial_jumped := false
+
+
 # no type hint as character can be 2D or 3D
 onready var character := get_parent()
 
@@ -96,9 +101,12 @@ func set_acceleration(value: float) -> void:
 
 func set_jumping(value: bool) -> void:
 	if value:
-		if character.is_on_floor() or current_jumps > 0:
-			if not character.is_on_floor():
+		if character.air_time < coyote_time or current_jumps > 0:
+			if _initial_jumped:
 				current_jumps -= 1
+			
+			else:
+				_initial_jumped = true
 			
 			var impulse
 			if deform_to_movement and not character.is_on_floor():
@@ -162,3 +170,4 @@ func jump_to(height: float) -> void:
 
 func _reset_jumps(_vertical_speed) -> void:
 	current_jumps = extra_jumps
+	_initial_jumped = false

@@ -102,11 +102,11 @@ func set_acceleration(value: float) -> void:
 func set_jumping(value: bool) -> void:
 	if value:
 		if character.air_time < coyote_time or current_jumps > 0:
-			if _initial_jumped:
-				current_jumps -= 1
+			if not _initial_jumped and character.air_time < coyote_time:
+				_initial_jumped = true
 			
 			else:
-				_initial_jumped = true
+				current_jumps -= 1
 			
 			var impulse
 			if deform_to_movement and not character.is_on_floor():

@@ -10,7 +10,7 @@ export var max_length := 10.0
 func _input(event):
 	if event is InputEventMouseButton:
 		if event.button_index == BUTTON_WHEEL_UP:
-			target_length = clamp(target_length - scroll_step, min_length, max_length)
+			target_length = clamp(current_length - scroll_step, min_length, max_length)
 		
 		elif event.button_index == BUTTON_WHEEL_DOWN:
-			target_length = clamp(target_length + scroll_step, min_length, max_length)
+			target_length = clamp(current_length + scroll_step, min_length, max_length)

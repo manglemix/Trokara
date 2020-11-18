@@ -1,3 +1,6 @@
+# A GTA style arm for cameras
+# Will only shorten the arm if the end is intersecting an obstacle
+# So the arm can intersect small obstacles without shortening
 class_name KinematicArm
 extends Spatial
 
@@ -69,7 +72,7 @@ func _ready():
 
 
 func _physics_process(delta):
-	# warning-ignore:return_value_discarded
+	current_length = lerp(current_length, target_length, weight * delta)
 	var collision_info := _move_kinematic_body()
 	
 	if is_instance_valid(collision_info):
@@ -79,21 +82,21 @@ func _physics_process(delta):
 		else:
 			var relative_origin := global_transform.origin - kinematic_body.global_transform.origin
 			var arm_vector := - global_transform.basis.z * current_length
-			var perpendicular_vector_length := arm_vector.dot(collision_info.normal)
+			var perpendicular_arm_length := arm_vector.dot(collision_info.normal)
 			var perpendicular_distance := collision_info.normal.dot(relative_origin)
-			var ratio := abs(perpendicular_distance / perpendicular_vector_length)
+			var ratio := abs(perpendicular_distance / perpendicular_arm_length)
 			var correction_vector := arm_vector.slide(collision_info.normal) * ratio + relative_origin.slide(collision_info.normal)
 			
 			if correction_vector.dot(arm_vector) > 0:
 				_reset_kinematic_body()
 			
 			else:
+				# warning-ignore:return_value_discarded
 				kinematic_body.move_and_collide(correction_vector)
-				current_length = arm_vector.length() * ratio
+				current_length *= ratio
 				_update_children()
 	
 	else:
-		current_length = lerp(current_length, target_length, weight * delta)
 		_update_children()
 
 

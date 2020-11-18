@@ -43,7 +43,7 @@ func _process(delta):
 	
 	character.movement_vector = tmp_vector
 	
-	if auto_rotate:
+	if not is_zero_approx(tmp_vector.length_squared()) and auto_rotate:
 		var original_basis: Basis
 		if counter_rotate_basis:
 			original_basis = basis_node.global_transform.basis

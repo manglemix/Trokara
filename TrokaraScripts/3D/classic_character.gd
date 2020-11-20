@@ -1,4 +1,4 @@
-# EXtends the character script to have more natural movement through interpolation
+# Extends the character script to have more natural movement through interpolation
 # Also adds air strafing, which limits the air speed so there is no net acceleration
 class_name ClassicCharacter
 extends Character

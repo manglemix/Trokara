@@ -40,6 +40,9 @@ var floor_collision: KinematicCollision
 # if true, this node will try to stick to the ground, if the ground is within the snap distance
 var snap_to_floor := true
 
+# if true, the last floor collision will not be overwritten
+var lock_floor := false
+
 # if true, the snapping feature is temporarily disabled until this node is falling
 # this is so that this node does not snap to the floor when jumping upwards
 var _impulsing := false
@@ -138,7 +141,7 @@ func _integrate_movement(vector: Vector3, _delta: float) -> Vector3:
 func _physics_process(delta: float):
 	var vertical_speed := get_vertical_speed()
 	
-	if not _impulsing:
+	if not _impulsing and not lock_floor:
 		# checks if this node is directly on the floor
 		# we can't just cast the shape as far as the snap distance, as it tends to overshoot if this node is directly on the floor
 		# the overshooting will cause an overcompensation when snapping, causing sliding on slopes

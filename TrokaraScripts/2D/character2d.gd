@@ -88,12 +88,12 @@ func get_vertical_speed() -> float:
 
 func align_to_floor(vector: Vector2) -> Vector2:
 	# this will rotate the vector given on the plane formed by the vector and the up vector, such that the vector is along the floor plane
-	# returns vector if not on floor
+	# returns the vector perpendicular to the up_vector if there is no floor
 	if is_on_floor():
 		return vector.slide(floor_collision.normal).normalized() * vector.length()
 	
 	else:
-		return vector
+		return Vector2(- up_vector.y, up_vector.x) * sign(up_vector.cross(vector)) * vector.length()
 
 
 func test_floor(distance: float = get("collision/safe_margin"), max_angle := floor_max_angle) -> KinematicCollision2D:
@@ -129,7 +129,7 @@ func _integrate_movement(vector: Vector2, _delta: float) -> Vector2:
 	# right now this will only allow the character to move when it is on the ground
 	# linear_velocity should not be set in this function
 	if is_on_floor():
-		return vector
+		return align_to_floor(vector)
 		
 	else:
 		return linear_velocity
@@ -162,11 +162,7 @@ func _physics_process(delta: float):
 	
 	linear_velocity = _integrate_movement(movement_vector, delta)
 	
-	if is_on_floor():
-		# this will prevent speed loss due to sliding, and will allow the character to run down slopes
-		linear_velocity = align_to_floor(linear_velocity)
-		
-	else:
+	if not is_on_floor():
 		air_time += delta
 		linear_velocity += down_vector * gravity_acceleration * delta
 		

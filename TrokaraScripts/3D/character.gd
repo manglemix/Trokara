@@ -88,12 +88,12 @@ func get_vertical_speed() -> float:
 
 func align_to_floor(vector: Vector3) -> Vector3:
 	# this will rotate the vector given on the plane formed by the vector and the up vector, such that the vector is along the floor plane
-	# returns vector if not on floor
+	# returns the vector perpendicular to the up_vector if there is no floor
 	if is_on_floor():
-		return up_vector.cross(vector).cross(floor_collision.normal).normalized() * vector.length()
+		return vector.slide(floor_collision.normal).normalized() * vector.length()
 	
 	else:
-		return vector
+		return up_vector.rotated(up_vector.cross(vector).normalized(), PI / 2) * vector.length()
 
 
 func test_floor(distance: float = get("collision/safe_margin"), max_angle := floor_max_angle) -> KinematicCollision:

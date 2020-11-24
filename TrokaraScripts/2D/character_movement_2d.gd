@@ -27,7 +27,7 @@ export var target_node_path: NodePath
 var movement_vector: Vector2
 var target_node: Node2D
 
-# Modify these after _ready if need be, instead of basis_node_path
+# Modify these after _ready if need be
 onready var basis_node: Node2D = get_node(basis_node_path)
 onready var body_node: Node2D = get_node(body_node_path)
 onready var character: Character2D = get_parent()

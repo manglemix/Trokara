@@ -89,7 +89,7 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://TrokaraScripts/3D/scrollable_kinematic_arm.gd"
 }, {
-"base": "Spatial",
+"base": "Node",
 "class": "StepUp",
 "language": "GDScript",
 "path": "res://TrokaraScripts/3D/step_up.gd"

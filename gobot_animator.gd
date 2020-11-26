@@ -28,7 +28,7 @@ func handle_jump() -> void:
 		_state_playback.travel("standing_jump")
 
 
-func handle_landing(vertical_speed: float) -> void:
+func handle_landing(vertical_speed: float, _on_floor) -> void:
 	if vertical_speed <= - landing_speed_cutoff:
 		_state_playback.travel("land")
 

@@ -39,7 +39,7 @@ List of features ready and TODOs for future development
 * Improved floor snapping
 * Near zero deviance on slopes
 * Perfectly equal velocities on all slopes
-* Dual height jumps
+* Multi jumps, off of slopes, ramps and steep walls
 * Smarter alternative to SpringArm (KinematicArm)
 * Completely set up for inheritance and AI
 * Plenty of comments (feel free to contact me with any questions)
@@ -47,7 +47,8 @@ List of features ready and TODOs for future development
 
 Features to be added (open to other contributors!):
 * Wall Running
-* Modular Animation Script
+* Modular Animation Script (still waiting for ideas!)
+* Intuitive character importer
 
 ## Status
 Project is: _in progress_ \

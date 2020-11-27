@@ -181,7 +181,7 @@ func jump_to(height: float) -> void:
 	# sets jumping to true until the target height is reached, or the apex of the jump is reached
 	# if height is set to below initial_jump_height, the character will still jump to the initial_jump_height
 	var a := acceleration
-	var b: float = 2 * _calculate_impulse(not _initial_jumped and _check_floor())
+	var b: float = 2 * _calculate_impulse(not _initial_jumped and _check_floor()).dot(character.up_vector)
 	var c := - 2 * (height - initial_jump_height)
 	var t := (- b + sqrt(b * b - 4 * a * c)) / 2 / a
 	

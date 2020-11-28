@@ -199,8 +199,7 @@ func _check_slope(vertical_speed: float, was_on_slope: bool) -> bool:
 	# assumes slope_collision is not null
 	last_slope_collision = slope_collision
 	last_slope_time_msecs = OS.get_system_time_msecs()
-
-	if slope_collision.normal.angle_to(up_vector) <= floor_max_angle:
+	if abs(slope_collision.normal.angle_to(up_vector)) <= floor_max_angle:
 		var was_on_floor = not is_on_floor()
 		floor_collision = slope_collision
 		last_floor_collision = slope_collision

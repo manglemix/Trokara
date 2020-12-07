@@ -184,7 +184,7 @@ func _physics_process(delta):
 	if not is_on_floor():
 		linear_velocity += down_vector * gravity_acceleration * delta
 		
-		if _impulsing and not is_instance_valid(move_and_collide(down_vector * snap_distance, true, true, true)):
+		if _impulsing and vertical_speed <= 0:
 			_impulsing = false
 			snap_to_floor = true
 	

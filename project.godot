@@ -124,7 +124,7 @@ _global_script_class_icons={
 
 config/name="Trokara"
 run/main_scene="res://demo.tscn"
-config/icon="res://icon.png"
+config/icon="res://img/trokara_tortoise.png"
 
 [debug]
 

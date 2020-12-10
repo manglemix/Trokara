@@ -12,10 +12,10 @@ func _integrate_movement(vector: Vector3, delta: float) -> Vector3:
 	if is_on_floor():
 		# Use acceleration_weight for speeding up, and use brake_weight for slowing down
 		if vector.length() >= linear_velocity.length():
-			return linear_velocity.linear_interpolate(align_to_floor(vector), acceleration_weight * delta)
+			return linear_velocity.linear_interpolate(align_to_floor(vector), 1.0 - exp(- acceleration_weight * delta))
 			
 		else:
-			return linear_velocity.linear_interpolate(align_to_floor(vector), brake_weight * delta)
+			return linear_velocity.linear_interpolate(align_to_floor(vector), 1.0 - exp(- brake_weight * delta))
 	
 	else:
 		# this will allow the linear_velocity to be modified, without changing its magnitude

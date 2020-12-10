@@ -130,13 +130,14 @@ func set_jumping(value: bool) -> void:
 			character.linear_velocity = _calculate_impulse(false)
 		
 		_current_jump_time = jump_time
+		set_physics_process(value)
+		jumping = value
 		emit_signal("jumped")
 		
 	elif jumping:
+		set_physics_process(value)
+		jumping = value
 		emit_signal("falling")
-	
-	set_physics_process(value)
-	jumping = value
 
 
 func set_max_deflection_angle_degrees(value: float) -> void:

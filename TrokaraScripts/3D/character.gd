@@ -127,15 +127,13 @@ func is_on_slope() -> bool:
 	return is_instance_valid(slope_collision)
 
 
-func apply_impulse(velocity: Vector3) -> void:
-	# provides an easy way to add velocity to linear_velocity, whilst this node is currently snapped to the floor
-	# not necessary if already in the air
+func temporary_unsnap() -> void:
+	# Call this method before changing linear_velocity if the character is on the floor
+	# this ensures that you can jump without remaining snapped
 	if snap_to_floor:
 		_impulsing = true
 		snap_to_floor = false
 		floor_collision = null
-	
-	linear_velocity += velocity
 
 
 func _integrate_movement(vector: Vector3, _delta: float) -> Vector3:

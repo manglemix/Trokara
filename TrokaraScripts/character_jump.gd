@@ -123,7 +123,8 @@ func set_jumping(value: bool) -> void:
 	if value:
 		if not _initial_jumped and _check_floor():
 			_initial_jumped = true
-			character.apply_impulse(_calculate_impulse(true) - clamp(character.get_vertical_speed(), - INF, 0) * character.up_vector)
+			character.temporary_unsnap()
+			character.linear_velocity = _calculate_impulse(true)
 		
 		elif current_jumps > 0:
 			current_jumps -= 1

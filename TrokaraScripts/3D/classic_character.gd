@@ -19,6 +19,11 @@ func _integrate_movement(vector: Vector3, delta: float) -> Vector3:
 	
 	else:
 		# this will allow the linear_velocity to be modified, without changing its magnitude
-		var speed := linear_velocity.length()
-		var new_velocity := linear_velocity + vector * delta
-		return new_velocity.normalized() * speed
+		var cross_product := up_vector.cross(vector).normalized()
+		if cross_product.is_normalized():
+			# essentially, we rotate and resize the vector such that it is identical to the linear velocity, except its direction may be different
+			var corrected_vector := up_vector.rotated(cross_product, up_vector.angle_to(linear_velocity)) * linear_velocity.length()
+			# so then we just interpolate between to change direction without altering magnitude
+			return linear_velocity.linear_interpolate(corrected_vector, 1.0 - exp(- acceleration_weight * delta))
+		
+		return linear_velocity

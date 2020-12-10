@@ -201,7 +201,7 @@ func _check_slope(vertical_speed: float, was_on_slope: bool) -> bool:
 	last_slope_time_msecs = OS.get_system_time_msecs()
 
 	if slope_collision.normal.angle_to(up_vector) <= floor_max_angle:
-		var was_on_floor = not is_on_floor()
+		var was_on_floor = is_on_floor()
 		floor_collision = slope_collision
 		last_floor_collision = slope_collision
 		last_floor_time_msecs = last_slope_time_msecs
@@ -211,7 +211,7 @@ func _check_slope(vertical_speed: float, was_on_slope: bool) -> bool:
 			# if it was called before setting the variables above, the floor_collision would be valid even while _impulsing (which would be wrong)
 			emit_signal("landed", vertical_speed, true)
 		
-		return true
+		return is_on_floor()		# because floor collision could be overwritten in the emit signal above
 	
 	else:
 		if not was_on_slope:

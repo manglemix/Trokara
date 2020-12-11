@@ -26,6 +26,23 @@ export var deform_to_movement := true
 # this value is multiplied with the movement_vector to determine how much the initial_velocity is deformed/skewed
 export var deformation_factor := 1.0
 
+# if true, the initial jump would be along the floor normal
+export var use_floor_normal := true
+
+# the maximum angle from the up vector that the initial impulse can be deflected by
+export var max_deflection_angle_degrees := 45.0 setget set_max_deflection_angle_degrees
+
+# the angle between the initial impulse (after clamping the angle) and the up vector will be multiplied with this
+# this is to reduce the amount of deflection caused by the floor normal
+export var floor_angle_factor := 0.5
+
+# if true, the character can jump from steep slopes, even if the character cannot walk on it
+# also allows jumps to reset on slopes
+export var jump_off_slope := true
+
+# the maximum inclination a valid slope can have
+export var max_slope_angle_degrees := 60.0 setget set_max_slope_angle_degrees
+
 # The velocity applied on the initial jump
 var initial_velocity setget set_initial_velocity
 
@@ -39,8 +56,9 @@ var acceleration: float setget set_acceleration
 # if set from false to true, the character will jump, otherwise it will stop any acceleration and begin falling
 var jumping := false setget set_jumping
 
-# current number of jumps
-var current_jumps := 0
+# the radian counterparts
+var max_deflection_angle := PI / 4 setget set_max_deflection_angle
+var max_slope_angle := PI / 3
 
 # How much time there is left for the full jump
 var _current_jump_time: float
@@ -49,6 +67,8 @@ var _current_jump_time: float
 # needed to prevent the character from jumping multiple times within the coyote time
 var _initial_jumped := false
 
+# current number of jumps
+onready var current_jumps := extra_jumps
 
 # no type hint as character can be 2D or 3D
 onready var character := get_parent()
@@ -101,40 +121,44 @@ func set_acceleration(value: float) -> void:
 
 func set_jumping(value: bool) -> void:
 	if value:
-		if character.air_time < coyote_time or current_jumps > 0:
-			if not _initial_jumped and character.air_time < coyote_time:
-				_initial_jumped = true
-			
-			else:
-				current_jumps -= 1
-			
-			var impulse
-			if deform_to_movement and not character.is_on_floor():
-				# The impulse vector consists of the initial_velocity added with the flattened movement_vector
-				impulse = initial_velocity + character.movement_vector.slide(character.up_vector).normalized() * character.movement_vector.length() * deformation_factor
-				# this rescales the impluse so that the vertical speed is equal to initial_velocity's vertical speed
-				impulse *= initial_velocity.dot(character.up_vector) / impulse.dot(character.up_vector)
-			
-			else:
-				impulse = initial_velocity
-			
-			if character.is_on_floor():
-				character.apply_impulse(impulse)
-			
-			else:
-				character.linear_velocity = impulse
-			
-			_current_jump_time = jump_time
-			emit_signal("jumped")
+		if not _initial_jumped and _check_floor():
+			_initial_jumped = true
+			character.temporary_unsnap()
+			character.linear_velocity += _calculate_impulse(true)
 		
-		else:
-			return
+		elif current_jumps > 0:
+			current_jumps -= 1
+			character.linear_velocity = _calculate_impulse(false)
+		
+		_current_jump_time = jump_time
+		set_physics_process(value)
+		jumping = value
+		emit_signal("jumped")
 		
 	elif jumping:
+		set_physics_process(value)
+		jumping = value
 		emit_signal("falling")
-	
-	set_physics_process(value)
-	jumping = value
+
+
+func set_max_deflection_angle_degrees(value: float) -> void:
+	max_deflection_angle_degrees = value
+	max_deflection_angle = deg2rad(value)
+
+
+func set_max_deflection_angle(value: float) -> void:
+	max_deflection_angle = value
+	max_deflection_angle_degrees = rad2deg(value)
+
+
+func set_max_slope_angle_degrees(value: float) -> void:
+	max_slope_angle_degrees = value
+	max_slope_angle = deg2rad(value)
+
+
+func set_max_slope_angle(value: float) -> void:
+	max_slope_angle = value
+	max_slope_angle_degrees = rad2deg(value)
 
 
 func _ready():
@@ -153,9 +177,9 @@ func _physics_process(delta):
 
 func jump_to(height: float) -> void:
 	# sets jumping to true until the target height is reached, or the apex of the jump is reached
-	# if height is set to below initial_jump_height, the character wil lstill jump to the initial_jump_height
+	# if height is set to below initial_jump_height, the character will still jump to the initial_jump_height
 	var a := acceleration
-	var b: float = 2 * initial_velocity.dot(character.up_vector)
+	var b: float = 2 * _calculate_impulse(not _initial_jumped and _check_floor()).dot(character.up_vector)
 	var c := - 2 * (height - initial_jump_height)
 	var t := (- b + sqrt(b * b - 4 * a * c)) / 2 / a
 	
@@ -168,6 +192,42 @@ func jump_to(height: float) -> void:
 		set_jumping(false)
 
 
-func _reset_jumps(_vertical_speed) -> void:
-	current_jumps = extra_jumps
-	_initial_jumped = false
+func _reset_jumps(_vertical_speed, on_floor: bool) -> void:
+	# private function to reset jumps
+	if on_floor or (jump_off_slope and character.slope_collision.normal.angle_to(character.up_vector) <= max_slope_angle):
+		current_jumps = extra_jumps
+		_initial_jumped = false
+
+
+func _check_floor() -> bool:
+	# private method to check if the character is on a floor or slope
+	# accounts for coyote time
+	var current_time := OS.get_system_time_msecs()
+	return (current_time - character.last_floor_time_msecs) / 1000.0 < coyote_time or \
+		(jump_off_slope and (current_time - character.last_slope_time_msecs) / 1000.0 < coyote_time and character.last_slope_collision.normal.angle_to(character.up_vector) <= max_slope_angle)
+
+
+func _calculate_impulse(on_floor:=true):
+	# private function which returns what would be the initial impulse based on the current parameters and floor
+	if on_floor:
+		var angle: float = character.up_vector.angle_to(character.last_slope_collision.normal)
+		if is_zero_approx(angle):
+			return initial_velocity
+			
+		else:
+			angle = clamp(angle, 0, max_deflection_angle) * floor_angle_factor
+			if typeof(character.up_vector) == TYPE_VECTOR3:
+				var cross_vector = character.up_vector.cross(character.last_slope_collision.normal).normalized()
+				return character.up_vector.rotated(cross_vector, angle) * initial_velocity.length()
+			
+			else:
+				return character.up_vector.rotated(angle) * initial_velocity.length()
+	
+	elif deform_to_movement:
+		# The impulse vector consists of the initial_velocity added with the flattened movement_vector
+		var impulse = initial_velocity + character.movement_vector.slide(character.up_vector).normalized() * character.movement_vector.length() * deformation_factor
+		# this rescales the impluse so that the vertical speed is equal to initial_velocity's vertical speed
+		return impulse * initial_velocity.dot(character.up_vector) / impulse.dot(character.up_vector)
+		
+	else:
+		return initial_velocity

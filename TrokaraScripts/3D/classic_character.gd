@@ -1,11 +1,12 @@
 # Extends the character script to have more natural movement through interpolation
-# Also adds air strafing, which limits the air speed so there is no net acceleration
+# Also adds air strafing, which also prevents infinite speeds
 class_name ClassicCharacter
 extends Character
 
 
 export var acceleration_weight := 12.0		# weight used to interpolate velocity to the movement vector
 export var brake_weight := 18.0				# weight used to interpolate velocity to 0
+export var strafe_weight := 2.0
 
 
 func _integrate_movement(vector: Vector3, delta: float) -> Vector3:
@@ -18,12 +19,6 @@ func _integrate_movement(vector: Vector3, delta: float) -> Vector3:
 			return linear_velocity.linear_interpolate(align_to_floor(vector), 1.0 - exp(- brake_weight * delta))
 	
 	else:
-		# this will allow the linear_velocity to be modified, without changing its magnitude
-		var cross_product := up_vector.cross(vector).normalized()
-		if cross_product.is_normalized():
-			# essentially, we rotate and resize the vector such that it is identical to the linear velocity, except its direction may be different
-			var corrected_vector := up_vector.rotated(cross_product, up_vector.angle_to(linear_velocity)) * linear_velocity.length()
-			# so then we just interpolate between to change direction without altering magnitude
-			return linear_velocity.linear_interpolate(corrected_vector, 1.0 - exp(- acceleration_weight * delta))
-		
-		return linear_velocity
+		# instead of interpolating the linear_velocity directly, this code only interpolates the non vertical component of linear_velocity
+		var vertical_velocity := linear_velocity.project(up_vector)
+		return (linear_velocity - vertical_velocity).linear_interpolate(align_to_floor(vector), 1.0 - exp(- strafe_weight * delta)) + vertical_velocity

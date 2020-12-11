@@ -113,7 +113,13 @@ func align_to_floor(vector: Vector3) -> Vector3:
 		return up_vector.cross(vector).cross(floor_collision.normal).normalized() * vector.length()
 	
 	else:
-		return up_vector.rotated(up_vector.cross(vector).normalized(), PI / 2) * vector.length()
+		var cross_product := up_vector.cross(vector).normalized()
+		
+		if cross_product.is_normalized():
+			return up_vector.rotated(cross_product, PI / 2) * vector.length()
+		
+		# if the cross product is not normalized, it means that vector is along the up vector, and therefore cannot be aligned
+		return vector
 
 
 func is_on_floor() -> bool:

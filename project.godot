@@ -9,11 +9,6 @@
 config_version=4
 
 _global_script_classes=[ {
-"base": "AnimationTree",
-"class": "BasicAnimator",
-"language": "GDScript",
-"path": "res://TrokaraScripts/AnimationTrees/basic_animator.gd"
-}, {
 "base": "KinematicBody",
 "class": "Character",
 "language": "GDScript",
@@ -28,11 +23,6 @@ _global_script_classes=[ {
 "class": "CharacterJump",
 "language": "GDScript",
 "path": "res://TrokaraScripts/character_jump.gd"
-}, {
-"base": "Node",
-"class": "CharacterMovement",
-"language": "GDScript",
-"path": "res://TrokaraScripts/3D/character_movement.gd"
 }, {
 "base": "Node",
 "class": "CharacterMovement2D",
@@ -54,11 +44,6 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://TrokaraScripts/controllable_character_jump.gd"
 }, {
-"base": "CharacterMovement",
-"class": "ControllableCharacterMovement",
-"language": "GDScript",
-"path": "res://TrokaraScripts/3D/controllable_character_movement.gd"
-}, {
 "base": "CharacterMovement2D",
 "class": "ControllableCharacterMovement2D",
 "language": "GDScript",
@@ -69,10 +54,25 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://TrokaraScripts/3D/controllable_pivot.gd"
 }, {
+"base": "Node",
+"class": "CopyBasis",
+"language": "GDScript",
+"path": "res://TrokaraScripts/3D/copy_basis.gd"
+}, {
+"base": "Node",
+"class": "FaceMovement",
+"language": "GDScript",
+"path": "res://TrokaraScripts/3D/face_movement.gd"
+}, {
 "base": "Spatial",
 "class": "KinematicArm",
 "language": "GDScript",
 "path": "res://TrokaraScripts/3D/kinematic_arm.gd"
+}, {
+"base": "Node",
+"class": "MovementInput",
+"language": "GDScript",
+"path": "res://TrokaraScripts/3D/movement_input.gd"
 }, {
 "base": "Spatial",
 "class": "PivotPoint",
@@ -100,19 +100,19 @@ _global_script_classes=[ {
 "path": "res://velocitymeter.gd"
 } ]
 _global_script_class_icons={
-"BasicAnimator": "",
 "Character": "",
 "Character2D": "",
 "CharacterJump": "",
-"CharacterMovement": "",
 "CharacterMovement2D": "",
 "ClassicCharacter": "",
 "ClassicCharacter2D": "",
 "ControllableCharacterJump": "",
-"ControllableCharacterMovement": "",
 "ControllableCharacterMovement2D": "",
 "ControllablePivot": "",
+"CopyBasis": "",
+"FaceMovement": "",
 "KinematicArm": "",
+"MovementInput": "",
 "PivotPoint": "",
 "PointingNode": "",
 "ScrollableKinematicArm": "",

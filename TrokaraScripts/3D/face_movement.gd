@@ -34,7 +34,7 @@ func _ready():
 	_is_ready = true
 
 
-func _process(delta):
+func _process(_delta):
 	if always_rotate:
 		if not is_zero_approx(movement_source.movement_vector.length_squared()):
 			# only update last movement vector if the new movement vector is nonzero

@@ -29,7 +29,7 @@ func _ready():
 	_is_ready = true
 
 
-func _process(delta):
+func _process(_delta):
 	if always_rotate or not is_zero_approx(movement_source.movement_vector.length_squared()):
 		var original_basis := basis_node.global_transform.basis
 		var rotation := original_basis.get_euler()

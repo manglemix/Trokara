@@ -17,7 +17,7 @@ func _ready():
 		basis_node = get_node(basis_node_path)
 
 
-func _input(event):
+func _input(_event):
 	# feel free to rename the inputs
 	
 	# the following magic with movement_vector allows finer control with joystick/joypad

@@ -58,7 +58,7 @@ func _process(_delta):
 			_last_movement_vector = tmp_vector
 	
 	if not enable_pitch_rotation:
-		tmp_vector -= tmp_vector.project(get_parent().up_vector)		# Flatten the vector
+		tmp_vector -= tmp_vector.project(get_parent().global_transform.basis.y)		# Flatten the vector
 	
 	if not is_zero_approx(tmp_vector.length()):
 		var transform: Transform = get_parent().global_transform.looking_at(get_parent().global_transform.origin + tmp_vector, Vector3.UP)

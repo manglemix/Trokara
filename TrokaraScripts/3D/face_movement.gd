@@ -7,11 +7,13 @@ export var movement_source_path: NodePath = ".."			# The path to the node which 
 export var enable_pitch_rotation := false					# If true, the parent will be able to turn up and down to face the movement_vector
 export var interpolation_weight := 0.1						# If interpolation is not desired, set to 1
 export var enabled := true setget set_enabled				# If true, this node's process method will run
+export var always_rotate := true							# If true, the character will always rotate to the movement_vector even if there was no movement (it will look at the last movement_vector)
 export var counter_rotate_target_path: NodePath				# If given, the given node will not be affected by the rotation of the parent
 															# This is mostly only used if the parent of this node is the character, and the camera is parented to the character
 															# This will allow the camera to not be rotated by this node
 
 var _is_ready := false
+var _last_movement_vector: Vector3
 
 onready var movement_source: Spatial = get_node(movement_source_path)		# The node which has a movement_vector (usually the character; modify this variable instead of movement_source_path if needed)
 onready var counter_rotate_target: Spatial									# The node whose rotation will not be changed by this node
@@ -33,11 +35,20 @@ func _ready():
 
 
 func _process(delta):
-	if not is_zero_approx(movement_source.movement_vector.length_squared()):
-		var tmp_vector: Vector3 = movement_source.movement_vector
+	if always_rotate:
+		if not is_zero_approx(movement_source.movement_vector.length_squared()):
+			# only update last movement vector if the new movement vector is nonzero
+			_last_movement_vector = movement_source.movement_vector
+	
+	else:
+		# update last movement vector all the time
+		_last_movement_vector = movement_source.movement_vector
+	
+	if not is_zero_approx(_last_movement_vector.length_squared()):
+		var tmp_vector: Vector3 = _last_movement_vector
 		
 		if not enable_pitch_rotation:
-			tmp_vector -= tmp_vector.project(get_parent().up_vector)
+			tmp_vector -= tmp_vector.project(get_parent().up_vector)		# Flatten the vector
 		
 		var transform: Transform = get_parent().global_transform.looking_at(get_parent().global_transform.origin + tmp_vector, Vector3.UP)
 		var original_basis: Basis

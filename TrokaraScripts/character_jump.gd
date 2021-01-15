@@ -5,6 +5,9 @@ class_name CharacterJump
 extends Node
 
 
+enum SerialEnums {POSITION, NORMAL, TRAVEL, REMAINDER, COLLIDER, COLLIDER_SHAPE, COLLIDER_VELOCITY, COLLISION_TIME}
+enum _SurfaceType {NULL, FLOOR, WALL}
+
 signal jumped		# emitted as soon as jumping is set from false to true
 signal falling		# emitted as soon as jumping is set from true to false
 
@@ -38,10 +41,7 @@ export var floor_angle_factor := 0.5
 
 # if true, the character can jump from steep slopes, even if the character cannot walk on it
 # also allows jumps to reset on slopes
-export var jump_off_slope := true
-
-# the maximum inclination a valid slope can have
-export var max_slope_angle_degrees := 60.0 setget set_max_slope_angle_degrees
+export var jump_off_wall := true
 
 # The velocity applied on the initial jump
 var initial_velocity setget set_initial_velocity
@@ -56,9 +56,8 @@ var acceleration: float setget set_acceleration
 # if set from false to true, the character will jump, otherwise it will stop any acceleration and begin falling
 var jumping := false setget set_jumping
 
-# the radian counterparts
+# the radian counterpart
 var max_deflection_angle := PI / 4 setget set_max_deflection_angle
-var max_slope_angle := PI / 3
 
 # How much time there is left for the full jump
 var _current_jump_time: float
@@ -119,9 +118,19 @@ func set_acceleration(value: float) -> void:
 		push_error("jump acceleration is higher than gravity!")
 
 
+func set_max_deflection_angle_degrees(value: float) -> void:
+	max_deflection_angle_degrees = value
+	max_deflection_angle = deg2rad(value)
+
+
+func set_max_deflection_angle(value: float) -> void:
+	max_deflection_angle = value
+	max_deflection_angle_degrees = rad2deg(value)
+
+
 func set_jumping(value: bool) -> void:
 	if value:
-		if not _initial_jumped and _check_floor():
+		if not _initial_jumped and _can_initial_jump():
 			_initial_jumped = true
 			character.temporary_unsnap()
 			character.linear_velocity += _calculate_impulse(true)
@@ -141,30 +150,11 @@ func set_jumping(value: bool) -> void:
 		emit_signal("falling")
 
 
-func set_max_deflection_angle_degrees(value: float) -> void:
-	max_deflection_angle_degrees = value
-	max_deflection_angle = deg2rad(value)
-
-
-func set_max_deflection_angle(value: float) -> void:
-	max_deflection_angle = value
-	max_deflection_angle_degrees = rad2deg(value)
-
-
-func set_max_slope_angle_degrees(value: float) -> void:
-	max_slope_angle_degrees = value
-	max_slope_angle = deg2rad(value)
-
-
-func set_max_slope_angle(value: float) -> void:
-	max_slope_angle = value
-	max_slope_angle_degrees = rad2deg(value)
-
-
 func _ready():
-	# warning-ignore:return_value_discarded
+	# warning-ignore-all:return_value_discarded
 	set_physics_process(false)
-	character.connect("landed", self, "_reset_jumps")
+	character.connect("landed", self, "_handle_landed")
+	character.connect("touched_wall", self, "_handle_touched")
 
 
 func _physics_process(delta):
@@ -179,7 +169,7 @@ func jump_to(height: float) -> void:
 	# sets jumping to true until the target height is reached, or the apex of the jump is reached
 	# if height is set to below initial_jump_height, the character will still jump to the initial_jump_height
 	var a := acceleration
-	var b: float = 2 * _calculate_impulse(not _initial_jumped and _check_floor()).dot(character.up_vector)
+	var b: float = 2 * _calculate_impulse(not _initial_jumped and _can_initial_jump()).dot(character.up_vector)
 	var c := - 2 * (height - initial_jump_height)
 	var t := (- b + sqrt(b * b - 4 * a * c)) / 2 / a
 	
@@ -192,36 +182,53 @@ func jump_to(height: float) -> void:
 		set_jumping(false)
 
 
-func _reset_jumps(_vertical_speed, on_floor: bool) -> void:
+func _handle_landed(_vertical_speed) -> void:
 	# private function to reset jumps
-	if on_floor or (jump_off_slope and character.slope_collision.normal.angle_to(character.up_vector) <= max_slope_angle):
+	current_jumps = extra_jumps
+	_initial_jumped = false
+
+
+func _handle_touched(_normal_speed) -> void:
+	# private function to reset jumps
+	if jump_off_wall:
 		current_jumps = extra_jumps
 		_initial_jumped = false
 
 
-func _check_floor() -> bool:
-	# private method to check if the character is on a floor or slope
+func _can_initial_jump() -> int:
+	# private method to check if the character is on a floor or wall or nothing
 	# accounts for coyote time
 	var current_time := OS.get_system_time_msecs()
-	return (current_time - character.last_floor_time_msecs) / 1000.0 < coyote_time or \
-		(jump_off_slope and (current_time - character.last_slope_time_msecs) / 1000.0 < coyote_time and character.last_slope_collision.normal.angle_to(character.up_vector) <= max_slope_angle)
+	if not character.last_floor_collision.empty() and (current_time - character.last_floor_collision[SerialEnums.COLLISION_TIME]) / 1000.0 <= coyote_time:
+		return _SurfaceType.FLOOR
+	
+	if jump_off_wall and not character.last_wall_collision.empty() and (current_time - character.last_wall_collision[SerialEnums.COLLISION_TIME]) / 1000.0 <= coyote_time:
+		return _SurfaceType.WALL
+	
+	return _SurfaceType.NULL
 
 
-func _calculate_impulse(on_floor:=true):
+func _calculate_impulse(surface_type: int):
 	# private function which returns what would be the initial impulse based on the current parameters and floor
-	if on_floor:
-		var angle: float = character.up_vector.angle_to(character.last_slope_collision.normal)
-		if is_zero_approx(angle):
-			return initial_velocity
+	if surface_type != _SurfaceType.NULL:
+		if use_floor_normal:
+			var collision: Array = character.last_floor_collision if surface_type == _SurfaceType.FLOOR else character.last_wall_collision
+			var angle: float = character.up_vector.angle_to(collision[SerialEnums.NORMAL])
 			
-		else:
-			angle = clamp(angle, 0, max_deflection_angle) * floor_angle_factor
-			if typeof(character.up_vector) == TYPE_VECTOR3:
-				var cross_vector = character.up_vector.cross(character.last_slope_collision.normal).normalized()
-				return character.up_vector.rotated(cross_vector, angle) * initial_velocity.length()
+			if is_zero_approx(angle):
+				return initial_velocity
 			
 			else:
-				return character.up_vector.rotated(angle) * initial_velocity.length()
+				angle = clamp(angle, 0, max_deflection_angle) * floor_angle_factor
+				if typeof(character.up_vector) == TYPE_VECTOR3:
+					var cross_vector = character.up_vector.cross(collision[SerialEnums.NORMAL]).normalized()
+					return character.up_vector.rotated(cross_vector, angle) * initial_velocity.length()
+				
+				else:
+					return character.up_vector.rotated(angle) * initial_velocity.length()
+		
+		else:
+			return initial_velocity
 	
 	elif deform_to_movement:
 		# The impulse vector consists of the initial_velocity added with the flattened movement_vector

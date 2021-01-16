@@ -57,7 +57,6 @@ func _integrate_movement(vector: Vector3, delta: float) -> Vector3:
 			if cross_vector.is_normalized():
 				var slided_vector := new_velocity.slide(cross_vector)
 				return new_velocity - slided_vector * clamp((floor_collision[SerialEnums.NORMAL].angle_to(up_vector) - min_resistance_angle) / (floor_max_angle - min_resistance_angle) * resistance_factor, 0, 1)
-#			return new_velocity * clamp(1 - (PI / 2 - new_velocity.angle_to(up_vector) - min_resistance_angle) / (floor_max_angle - min_resistance_angle) * resistance_factor, 0, 1)
 		
 		return new_velocity
 	

@@ -17,11 +17,11 @@ export var gravity_factor := 1.0 setget set_gravity_factor
 # if true, this node will try to stick to the ground, if the ground is within the snap distance
 export var snap_to_floor := true
 
-# used in move_and_slide_with_snap to stick to the floor
-export var snap_distance := 0.05
+# used in move_and_slide_with_snap to stick to the floor (the export hint can be changed if needed)
+export(float, 0, 10) var snap_distance := 0.05
 
 # the maximum angle of a slope which can be climbed (used in move_and_slide_with_snap)
-export var floor_max_angle_degrees := 45.0 setget set_floor_max_angle_degrees
+export(float, 0, 180) var floor_max_angle_degrees := 45.0 setget set_floor_max_angle_degrees
 
 # if true, the character will not move up walls (but can still slide down them)
 export var dont_slide_up_walls := true

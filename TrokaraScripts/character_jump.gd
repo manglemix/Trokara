@@ -41,7 +41,7 @@ export var floor_angle_factor := 0.5
 
 # if true, the character can jump from steep slopes, even if the character cannot walk on it
 # also allows jumps to reset on slopes
-export var jump_off_wall := true
+export var jump_off_wall := false
 
 # The velocity applied on the initial jump
 var initial_velocity setget set_initial_velocity

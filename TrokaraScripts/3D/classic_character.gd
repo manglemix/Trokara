@@ -4,9 +4,27 @@ class_name ClassicCharacter
 extends Character
 
 
-export var acceleration_weight := 12.0		# weight used to interpolate velocity to the movement vector
-export var brake_weight := 18.0				# weight used to interpolate velocity to 0
-export var air_weight := 2.0				# weight used to interpolate air velocity
+export(float, 0, 1000) var acceleration_weight := 12.0				# weight used to interpolate velocity to the movement vector
+export(float, 0, 1000) var brake_weight := 18.0						# weight used to interpolate velocity to 0
+export(float, 0, 1000) var air_weight := 2.0				# weight used to interpolate air velocity
+export var enable_slope_resistance := true			# if enabled, movement up a steep slope will be slower
+export(float, 0, 1) var resistance_factor := 0.7	# how much the angle of the slope will slow down (1 is complete resistance)
+
+# the minimum angle after which movement up the slope will be reduced
+export(float, 0, 90) var min_resistance_angle_degrees := 35.0 setget set_min_resistance_angle_degrees
+
+# the radian counterpart
+var min_resistance_angle := deg2rad(35) setget set_min_resistance_angle
+
+
+func set_min_resistance_angle_degrees(value: float) -> void:
+	min_resistance_angle_degrees = value
+	min_resistance_angle = deg2rad(value)
+
+
+func set_min_resistance_angle(value: float) -> void:
+	min_resistance_angle = value
+	min_resistance_angle_degrees = rad2deg(value)
 
 
 static func special_lerp(from: Vector3, to: Vector3, weight: float, min_length:=-1.0) -> Vector3:
@@ -32,7 +50,16 @@ static func special_lerp(from: Vector3, to: Vector3, weight: float, min_length:=
 func _integrate_movement(vector: Vector3, delta: float) -> Vector3:
 	if is_on_floor():
 		# Use acceleration_weight for speeding up, and use brake_weight for slowing down
-		return linear_velocity.linear_interpolate(align_to_floor(vector), 1.0 - exp(- (acceleration_weight if vector.length() >= linear_velocity.length() else brake_weight) * delta))
+		var new_velocity := linear_velocity.linear_interpolate(align_to_floor(vector), 1.0 - exp(- (acceleration_weight if vector.length() >= linear_velocity.length() else brake_weight) * delta))
+		
+		if enable_slope_resistance:
+			var cross_vector := up_vector.cross(floor_collision[SerialEnums.NORMAL]).normalized()
+			if cross_vector.is_normalized():
+				var slided_vector := new_velocity.slide(cross_vector)
+				return new_velocity - slided_vector * clamp((floor_collision[SerialEnums.NORMAL].angle_to(up_vector) - min_resistance_angle) / (floor_max_angle - min_resistance_angle) * resistance_factor, 0, 1)
+#			return new_velocity * clamp(1 - (PI / 2 - new_velocity.angle_to(up_vector) - min_resistance_angle) / (floor_max_angle - min_resistance_angle) * resistance_factor, 0, 1)
+		
+		return new_velocity
 	
 	else: 
 		# instead of interpolating the linear_velocity directly, this code only interpolates the non vertical component of linear_velocity

@@ -52,7 +52,7 @@ func _integrate_movement(vector: Vector3, delta: float) -> Vector3:
 		# Use acceleration_weight for speeding up, and use brake_weight for slowing down
 		var new_velocity := linear_velocity.linear_interpolate(align_to_floor(vector), 1.0 - exp(- (acceleration_weight if vector.length() >= linear_velocity.length() else brake_weight) * delta))
 		
-		if enable_slope_resistance:
+		if enable_slope_resistance and new_velocity.normalized().dot(up_vector) > 0:
 			var cross_vector := up_vector.cross(floor_collision[SerialEnums.NORMAL]).normalized()
 			if cross_vector.is_normalized():
 				var slided_vector := new_velocity.slide(cross_vector)

@@ -33,7 +33,7 @@ func _integrate_movement(vector: Vector2, delta: float) -> Vector2:
 		var new_velocity := linear_velocity.linear_interpolate(align_to_floor(vector), 1.0 - exp(- (acceleration_weight if vector.length() >= linear_velocity.length() else brake_weight) * delta))
 		
 		if enable_slope_resistance:
-			return new_velocity * clamp((floor_collision[SerialEnums.NORMAL].angle_to(up_vector) - min_resistance_angle) / (floor_max_angle - min_resistance_angle) * resistance_factor, 0, 1)
+			return new_velocity * (1 - clamp((floor_collision[SerialEnums.NORMAL].angle_to(up_vector) - min_resistance_angle) / (floor_max_angle - min_resistance_angle) * resistance_factor, 0, 1))
 		
 		return new_velocity
 	

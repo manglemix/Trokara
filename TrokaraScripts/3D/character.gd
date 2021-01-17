@@ -196,14 +196,35 @@ func _physics_process(delta: float):
 				var dot_product := linear_velocity.dot(test_vector)
 				if is_zero_approx(dot_product) or dot_product > 0:
 					floor_collision = collision
+					linear_velocity = align_to_floor(linear_velocity)
 			
 			elif was_on_floor and dont_slide_up_walls:
 				# when hitting a wall, the character will slide up the wall, but that is not desired
 				# so the movement will be corrected to slide along the wall (not up the wall)
-				move_and_collide(((travel_vector - travel_vector.project(up_vector)).normalized() * travel_vector.length()).slide((collision[SerialEnums.NORMAL] - collision[SerialEnums.NORMAL].project(up_vector)).normalized()) - collision[SerialEnums.TRAVEL])
+				var corrected_vector := ((travel_vector - travel_vector.project(up_vector)).normalized() * travel_vector.length()).slide((collision[SerialEnums.NORMAL] - collision[SerialEnums.NORMAL].project(up_vector)).normalized())
+				collision = serial_move_and_collide(corrected_vector - collision[SerialEnums.TRAVEL])
+				
+				# correct the linear velocity
+				if collision.empty():
+					travel_vector = corrected_vector
+				
+				else:
+					travel_vector = collision[SerialEnums.TRAVEL]
+				
+				linear_velocity = travel_vector / delta
 			
 			else:
-				move_and_collide(collision[SerialEnums.REMAINDER].slide(collision[SerialEnums.NORMAL]))
+				var corrected_vector: Vector3 = collision[SerialEnums.REMAINDER].slide(collision[SerialEnums.NORMAL])
+				var second_collision := serial_move_and_collide(collision[SerialEnums.REMAINDER].slide(collision[SerialEnums.NORMAL]))
+				
+				# correct the linear velocity
+				if second_collision.empty():
+					travel_vector = collision[SerialEnums.TRAVEL] + corrected_vector
+				
+				else:
+					travel_vector = collision[SerialEnums.TRAVEL] + second_collision[SerialEnums.TRAVEL]
+				
+				linear_velocity = travel_vector / delta
 	
 	# wall tracking
 	# so that even if the character isn't moving but is touching a wall, wall_collision will still update

@@ -39,13 +39,13 @@ var linear_velocity: Vector2
 var movement_vector: Vector2
 
 # the direction this node considers as down, originally uses the default gravity vector in project settings
-var down_vector: Vector2 = ProjectSettings.get_setting("physics/2d/default_gravity_vector") setget set_down_vector
+var down_vector: Vector2 = ProjectSettings.get_setting("physics/3d/default_gravity_vector") setget set_down_vector
 
 # the opposite of the down_vector
 var up_vector: Vector2 = - down_vector setget set_up_vector
 
 # the speed at which this node descends
-var gravity_acceleration: float = ProjectSettings.get_setting("physics/2d/default_gravity") setget set_gravity_acceleration
+var gravity_acceleration: float = ProjectSettings.get_setting("physics/3d/default_gravity") setget set_gravity_acceleration
 
 # contains information about the collision with a floor in each frame
 # floors are slopes whose incline is less than floor_max_angle

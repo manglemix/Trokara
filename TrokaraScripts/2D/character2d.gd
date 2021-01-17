@@ -145,7 +145,7 @@ func _integrate_movement(vector: Vector2, _delta: float) -> Vector2:
 
 func is_floor(collision: Array) -> bool:
 	# checks if the collision data (from serial_move_and_collide) is a floor
-	return collision[SerialEnums.NORMAL].angle_to(up_vector) <= floor_max_angle
+	return abs(collision[SerialEnums.NORMAL].angle_to(up_vector)) <= floor_max_angle
 
 
 func is_on_floor() -> bool:

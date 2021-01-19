@@ -155,7 +155,13 @@ func _integrate_movement(vector: Vector3, _delta: float) -> Vector3:
 
 
 func _physics_process(delta):
+	linear_velocity = _integrate_movement(movement_vector, delta)
 	var vertical_speed := get_vertical_speed()
+	
+	# I stayed away from move_and_slide_and_snap as it caused this node to slide down slopes even if stop on slope was true (and there was downward velocity)
+	# and for some reason had a bug when nearing the max floor angle, which caused this node to randomly shoot upwards at high speeds
+	# also, if there was any side to side movement on a slope, move_and_slide_and_snap would cause this node to drift downards
+	linear_velocity = move_and_slide(linear_velocity, up_vector, true, 4, floor_max_angle)
 	
 	if not _impulsing and not lock_floor:
 		# checks if this node is directly on a slope
@@ -183,19 +189,12 @@ func _physics_process(delta):
 		else:
 			floor_collision = null
 	
-	linear_velocity = _integrate_movement(movement_vector, delta)
-	
 	if not is_on_floor():
 		linear_velocity += down_vector * gravity_acceleration * delta
 		
 		if _impulsing and vertical_speed <= 0:
 			_impulsing = false
 			snap_to_floor = true
-	
-	# I stayed away from move_and_slide_and_snap as it caused this node to slide down slopes even if stop on slope was true (and there was downward velocity)
-	# and for some reason had a bug when nearing the max floor angle, which caused this node to randomly shoot upwards at high speeds
-	# also, if there was any side to side movement on a slope, move_and_slide_and_snap would cause this node to drift downards
-	linear_velocity = move_and_slide(linear_velocity, up_vector, true, 4, floor_max_angle)
 
 
 func _check_slope(vertical_speed: float, was_on_slope: bool) -> bool:

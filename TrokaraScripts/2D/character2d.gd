@@ -190,7 +190,8 @@ func _physics_process(delta: float):
 				var dot_product := linear_velocity.dot(test_vector)
 				if is_zero_approx(dot_product) or dot_product > 0:
 					floor_collision = collision
-					linear_velocity = align_to_floor(linear_velocity)
+					if was_on_floor:
+						linear_velocity = align_to_floor(linear_velocity)
 			
 			elif was_on_floor and dont_slide_up_walls:
 				# when hitting a wall, the character will slide up the wall, but that is not desired

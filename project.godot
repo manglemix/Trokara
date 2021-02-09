@@ -9,15 +9,15 @@
 config_version=4
 
 _global_script_classes=[ {
-"base": "KinematicBody",
-"class": "Character",
-"language": "GDScript",
-"path": "res://TrokaraScripts/3D/character.gd"
-}, {
 "base": "KinematicBody2D",
 "class": "Character2D",
 "language": "GDScript",
 "path": "res://TrokaraScripts/2D/character2d.gd"
+}, {
+"base": "KinematicBody",
+"class": "Character3D",
+"language": "GDScript",
+"path": "res://TrokaraScripts/3D/character.gd"
 }, {
 "base": "Node",
 "class": "CharacterJump",
@@ -29,7 +29,7 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://TrokaraScripts/2D/character_movement_2d.gd"
 }, {
-"base": "Character",
+"base": "Character3D",
 "class": "ClassicCharacter",
 "language": "GDScript",
 "path": "res://TrokaraScripts/3D/classic_character.gd"
@@ -38,6 +38,11 @@ _global_script_classes=[ {
 "class": "ClassicCharacter2D",
 "language": "GDScript",
 "path": "res://TrokaraScripts/2D/classic_character_2d.gd"
+}, {
+"base": "Resource",
+"class": "CollisionData3D",
+"language": "GDScript",
+"path": "res://TrokaraScripts/3D/colliison_data_3d.gd"
 }, {
 "base": "CharacterJump",
 "class": "ControllableCharacterJump",
@@ -100,12 +105,13 @@ _global_script_classes=[ {
 "path": "res://velocitymeter.gd"
 } ]
 _global_script_class_icons={
-"Character": "",
 "Character2D": "",
+"Character3D": "",
 "CharacterJump": "",
 "CharacterMovement2D": "",
 "ClassicCharacter": "",
 "ClassicCharacter2D": "",
+"CollisionData3D": "",
 "ControllableCharacterJump": "",
 "ControllableCharacterMovement2D": "",
 "ControllablePivot": "",

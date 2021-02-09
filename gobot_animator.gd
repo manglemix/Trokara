@@ -6,7 +6,7 @@ const MOVEMENT_TRANSITION_WEIGHT := 9.0
 var _character_is_moving: bool
 var _state_playback: AnimationNodeStateMachinePlayback = get("parameters/playback")
 
-onready var character: Character = get_parent()
+onready var character: Character3D = get_parent()
 onready var jump_controller: CharacterJump = $"../ControllableCharacterJump"
 onready var _last_origin := character.global_transform.origin
 

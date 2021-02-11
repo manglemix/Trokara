@@ -3,6 +3,8 @@ class_name Character3D
 extends KinematicBody
 
 
+const CORRECTION_DENOMINATOR_THRESHOLD = 0.01
+
 # emitted when this node contacts a floor or a slope; vertical_speed is the speed along the up_vector at the moment of collision
 signal landed(vertical_speed)
 
@@ -21,11 +23,10 @@ export(float, 0, 10) var snap_distance := 0.05
 # the maximum angle of a slope which can be climbed (used in move_and_slide_with_snap)
 export(float, 0, 180) var floor_max_angle_degrees := 45.0 setget set_floor_max_angle_degrees
 
-# if true, the character will not slide up walls if on the floor
-export var dont_slide_up_walls := true
-
 # if true, the character will keep track of adjacent walls even if the character is not moving (or is moving parallel to the wall)
 export var track_wall := false
+
+export var max_slides := 4
 
 # the radian counterpart
 var floor_max_angle := PI / 4 setget set_floor_max_angle
@@ -156,12 +157,18 @@ func _physics_process(delta: float):
 	# warning-ignore-all:return_value_discarded
 	linear_velocity = _integrate_movement(movement_vector, delta)
 	
+	var travel_vector := linear_velocity * delta
+	
+	var tmp_floor_collision := floor_collision
+	var tmp_wall_collision := wall_collision
+	
 	var was_on_floor := is_on_floor()
 	var was_on_wall := is_on_wall()
-	floor_collision = null
-	wall_collision = null
 	
-	if not was_on_floor and _impulsing:
+	var is_sliding_on_floor := was_on_floor
+	var is_sliding_on_wall := was_on_wall
+	
+	if not is_sliding_on_floor and _impulsing:
 		_impulsing = false
 		snap_to_floor = true
 	
@@ -169,92 +176,119 @@ func _physics_process(delta: float):
 	# I stayed away from move_and_slide_and_snap as it caused this node to slide down slopes even if stop on slope was true (and there was downward velocity)
 	# and for some reason had a bug when nearing the max floor angle, which caused this node to randomly shoot upwards at high speeds
 	# also, if there was any side to side movement on a slope, move_and_slide_and_snap would cause this node to drift downards
-	# move_and_slide had too little freedom
-	if not is_zero_approx(linear_velocity.length()):
-		var travel_vector := linear_velocity * delta
+	# the following is an alternative to move_and_slide, with extra functionality to avoid many inconsistencies in the physics engine
+	for _slide_count in range(max_slides):
+		var friction_factor := 1.0
+		var extra_velocity: Vector3
 		
-		var collision := move_and_collide(travel_vector)
+		if is_on_floor():
+			var collider := floor_collision.collider
+			
+			if "physics_material_override" in collider and collider.physics_material_override != null:
+				friction_factor = 1 - collider.physics_material_override.friction
+			
+			if "linear_velocity" in collider:
+				extra_velocity = collider.linear_velocity * delta
+			
+			elif collider is StaticBody:
+				extra_velocity = collider.constant_linear_velocity * delta
+				rotation += collider.constant_angular_velocity * delta
 		
-		if collision != null:
-			if collision.normal.angle_to(up_vector) <= floor_max_angle:
-				floor_collision = CollisionData3D.new(collision, self)
+		if is_on_wall():
+			var collider := wall_collision.collider
+			
+			if "physics_material_override" in collider and collider.physics_material_override != null:
+				friction_factor *= 1 - collider.physics_material_override.friction
+			
+			if "linear_velocity" in collider:
+				extra_velocity = collider.linear_velocity * delta
+			
+			elif collider is StaticBody:
+				extra_velocity = collider.constant_linear_velocity * delta
+				rotation += collider.constant_angular_velocity * delta
+		
+		if is_zero_approx(travel_vector.length()):
+			break
+		
+		var final_vector := travel_vector * friction_factor + extra_velocity
+		var collision := corrected_move_and_collide(final_vector)
+		
+		if collision == null:
+			break
+		
+		else:
+			collision.travel -= collision.travel.length() / final_vector.length() * extra_velocity
+			collision.travel /= friction_factor
+			
+			if collision.is_floor():
+				floor_collision = collision
 				
-				if was_on_floor:
-					linear_velocity = align_to_floor(linear_velocity)
+				if is_sliding_on_floor:
+					var new_vector := up_vector.cross(travel_vector).cross(collision.normal).normalized()
+					travel_vector = new_vector * (travel_vector - collision.travel).length()
+					linear_velocity = new_vector * linear_velocity.length()
 				
 				else:
-					var vertical_speed := get_vertical_speed()
-					emit_signal("landed", vertical_speed)
-					linear_velocity += down_vector * vertical_speed
+					is_sliding_on_floor = true
+					emit_signal("landed", get_vertical_speed())
+					
+					if "physics_material_override" in collision.collider and collision.collider.physics_material_override != null:
+						travel_vector = _handle_bounce(collision, travel_vector)
+					
+					else:
+						linear_velocity = linear_velocity.slide(collision.normal)
+						travel_vector = (travel_vector - collision.travel).slide(collision.normal)
 			
 			else:
-				if was_on_floor and dont_slide_up_walls:
-					# when hitting a wall, the character will slide up the wall, but that is not desired
-					# so the movement will be corrected to slide along the wall (not up the wall)
-					var corrected_vector := (travel_vector.slide(up_vector).normalized() * travel_vector.length()).slide(collision.normal.slide(up_vector).normalized())
-					var second_collision := move_and_collide(corrected_vector - collision.travel)
-					
-					# correct the linear velocity
-					if second_collision == null:
-						travel_vector = corrected_vector
-						wall_collision = CollisionData3D.new(collision, self)
-					
-					else:
-						travel_vector = second_collision.travel
-						_sort_collision(second_collision)
+				if not is_sliding_on_wall:
+					is_sliding_on_wall = true
+					emit_signal("touched_wall", linear_velocity.project(collision.normal))
+				
+				wall_collision = collision
+				
+				if is_sliding_on_floor:
+					travel_vector -= collision.travel
+					var corrected_normal := collision.normal.slide(up_vector).normalized()
+					travel_vector = (travel_vector.slide(up_vector).normalized() * travel_vector.length()).slide(corrected_normal)
+					linear_velocity = (linear_velocity.slide(up_vector).normalized() * linear_velocity.length()).slide(corrected_normal)
+				
+				elif "physics_material_override" in collision.collider and collision.collider.physics_material_override != null:
+					travel_vector = _handle_bounce(collision, travel_vector)
 				
 				else:
-					# otherwise, slide along the wall completely
-					var corrected_vector: Vector3 = travel_vector.slide(collision.normal).normalized() * travel_vector
-					var second_collision := move_and_collide(corrected_vector - collision.travel)
-					
-					# correct the linear velocity
-					if second_collision == null:
-						travel_vector = corrected_vector
-						wall_collision = CollisionData3D.new(collision, self)
-					
-					else:
-						travel_vector = second_collision.travel
-						_sort_collision(second_collision)
-				
-				linear_velocity = travel_vector / delta
+					linear_velocity = linear_velocity.slide(collision.normal)
+					travel_vector = (travel_vector - collision.travel).slide(collision.normal)
 	
 	# wall tracking
 	# so that even if the character isn't moving but is touching a wall, wall_collision will still update
-	if track_wall and not is_on_wall() and was_on_wall and last_wall_collision != null:
-		var collision := move_and_collide(- last_wall_collision.normal * get("collision/safe_margin"), true, true, true)
-		
-		if collision != null:
-			_sort_collision(collision)
+	if wall_collision == tmp_wall_collision:
+		wall_collision = null
+		if track_wall and was_on_wall and last_wall_collision != null:
+			var collision := move_and_collide(- last_wall_collision.normal * get("collision/safe_margin"), true, true, true)
+			
+			if collision != null:
+				_sort_collision(collision)
 	
 	# floor tracking
-	if not is_on_floor() and (was_on_floor or get_vertical_speed() <= 0):
-		# test vector is the direction we check if a floor is present
-		# the moment the character is initialised, we check the down vector
-		# but after the first contact, we check in the direction of the last floor normal
-		var has_hit_floor := last_floor_collision != null
-		var test_vector := (- last_floor_collision.normal) if has_hit_floor else down_vector
+	if floor_collision == tmp_floor_collision:
+		floor_collision = null
 		
-		# this will check if the character is standing directly on a floor
-		var collision := move_and_collide(test_vector * get("collision/safe_margin"), true, true, true)
-		
-		if collision != null:
-			if _sort_collision(collision):
-				linear_velocity = align_to_floor(linear_velocity)
-		
-		elif snap_to_floor and was_on_floor:
-			# if the character is not on a floor, but it was in the last frame,
-			# the character will try to snap to a floor
-			collision = move_and_collide(test_vector * snap_distance, true, true, true)
+		if was_on_floor:
+			var has_hit_floor := last_floor_collision != null
+			var test_vector := (- last_floor_collision.normal) if has_hit_floor else down_vector
+			
+			# this will check if the character is standing directly on a floor
+			var collision := corrected_move_and_collide(test_vector * snap_distance, true, true, true)
 			
 			if has_hit_floor and collision == null:
-				# if we used the last floor normal before, check the actual down vector
-				collision = move_and_collide(down_vector * snap_distance, true, true, true)
+				collision = corrected_move_and_collide(down_vector * snap_distance, true, true, true)
 			
-			if collision != null and collision.normal.angle_to(up_vector) <= floor_max_angle:
-				floor_collision = CollisionData3D.new(collision, self)
+			if collision != null and collision.is_floor():
+				floor_collision = collision
 				linear_velocity = align_to_floor(linear_velocity)
-				global_transform.origin += collision.travel
+				
+				if not is_zero_approx(collision.travel.length()):
+					global_transform.origin += collision.travel
 	
 	if is_on_floor():
 		last_floor_collision = floor_collision
@@ -266,17 +300,28 @@ func _physics_process(delta: float):
 		last_wall_collision = wall_collision
 
 
-func serial_move_and_collide(rel_vec: Vector3, infinite_inertia: bool = true, exclude_raycast_shapes: bool = true, test_only: bool = false) -> CollisionData3D:
-	# Extends move_and_collide to return an array instead of KinematicCollision
-	# This is because of this weird property where only 1 KinematicCollision instance exists within a frame within a single KinematicBody
-	# Meaning wall_collision and floor_collision could be the same instance even if they were created in different move_and_collide methods
-	# If you don't understand that, it's fine, because this is a private method so you shouldn't call it
+func corrected_move_and_collide(rel_vec: Vector3, infinite_inertia: bool = true, exclude_raycast_shapes: bool = true, test_only: bool = false) -> CollisionData3D:
+	# Fixes a bug in move_and_collide where it still slides against slopes
+	# It does this by finding the component of the collision.travel vector along the collision.normal
+	# This isn't just as simple as sliding the travel vector against the normal, as the portion of the travel vector before hitting the normal can affect the outcome
 	var collision := move_and_collide(rel_vec, infinite_inertia, exclude_raycast_shapes, test_only)
 	
 	if collision == null:
 		return null
 	
-	return CollisionData3D.new(collision, self)
+	var slided_vector := rel_vec.slide(collision.normal)
+	var collision_data := CollisionData3D.new(collision, self)
+	var denominator := sin(slided_vector.angle_to(rel_vec))
+	
+	if denominator >= CORRECTION_DENOMINATOR_THRESHOLD:
+		var correction := slided_vector.normalized() * collision.travel.slide(rel_vec.normalized()).length() / denominator
+		
+		if not test_only:
+			global_transform.origin -= correction
+		
+		collision_data.travel -= correction
+	
+	return collision_data
 
 
 func _sort_collision(collision: KinematicCollision) -> bool:
@@ -287,3 +332,17 @@ func _sort_collision(collision: KinematicCollision) -> bool:
 	else:
 		wall_collision = CollisionData3D.new(collision, self)
 		return false
+
+
+func _handle_bounce(collision: CollisionData3D, travel_vector: Vector3) -> Vector3:
+	travel_vector -= collision.travel
+	var factor: float
+	
+	if collision.collider.physics_material_override.absorbent:
+		factor = 2 - collision.collider.physics_material_override.bounce
+	
+	else:
+		factor = 1 + collision.collider.physics_material_override.bounce
+	
+	linear_velocity -= linear_velocity.project(collision.normal) * factor
+	return travel_vector - travel_vector.project(collision.normal) * factor

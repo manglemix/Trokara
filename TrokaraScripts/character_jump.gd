@@ -173,16 +173,15 @@ func set_jumping(value: bool) -> void:
 				current_jumps -= 1
 			
 			character.temporary_unsnap()
-			var flattened_velocity = character.linear_velocity.slide(up_vector)
 			
 			if absolute_impulse:
 				character.linear_velocity = initial_speed * initial_vector
 			
 			else:
-				character.linear_velocity = flattened_velocity + initial_speed * initial_vector
+				character.linear_velocity = character.linear_velocity.slide(up_vector) + initial_speed * initial_vector
 			
 			if deform_to_movement:
-				character.linear_velocity += flattened_velocity * deformation_factor
+				character.linear_velocity += character.movement_vector.slide(up_vector).normalized() * character.movement_vector.length() * deformation_factor
 			
 			current_jump_time = jump_time
 			emit_signal("jumped")

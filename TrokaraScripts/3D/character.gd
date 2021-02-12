@@ -20,7 +20,7 @@ export var snap_to_floor := true
 # used in move_and_slide_with_snap to stick to the floor (the export hint can be changed if needed)
 export(float, 0, 10) var snap_distance := 0.05
 
-# the maximum angle of a slope which can be climbed (used in move_and_slide_with_snap)
+# the maximum angle of a slope which can be climbed
 export(float, 0, 180) var floor_max_angle_degrees := 45.0 setget set_floor_max_angle_degrees
 
 # if true, the character will keep track of adjacent walls even if the character is not moving (or is moving parallel to the wall)
@@ -182,11 +182,11 @@ func _physics_process(delta: float):
 		if _last_floor == null or collider != _last_floor:
 			_last_floor = collider
 			_last_floor_transform = collider.global_transform
-		
+
 		else:
 			travel_vector += collider.global_transform.xform(_last_floor_transform.affine_inverse().xform(global_transform.origin)) - global_transform.origin
 			_last_floor_transform = collider.global_transform
-	
+
 	else:
 		_last_floor = null
 	
@@ -226,15 +226,16 @@ func _physics_process(delta: float):
 		if is_zero_approx(travel_vector.length()):
 			break
 		
-		var collision := corrected_move_and_collide(travel_vector * friction_factor)
+		var collision = move_and_collide(travel_vector * friction_factor)
 		
 		if collision == null:
 			break
 		
 		else:
+			collision = CollisionData3D.new(collision, self)
 			collision.travel /= friction_factor
 			
-			if collision.is_floor():
+			if collision.normal.angle_to(up_vector) <= floor_max_angle:
 				floor_collision = collision
 				
 				if is_sliding_on_floor:
@@ -262,7 +263,7 @@ func _physics_process(delta: float):
 				
 				if is_sliding_on_floor:
 					travel_vector -= collision.travel
-					var corrected_normal := collision.normal.slide(up_vector).normalized()
+					var corrected_normal: Vector3 = collision.normal.slide(up_vector).normalized()
 					travel_vector = (travel_vector.slide(up_vector).normalized() * travel_vector.length()).slide(corrected_normal)
 					linear_velocity = (linear_velocity.slide(up_vector).normalized() * linear_velocity.length()).slide(corrected_normal)
 				
@@ -292,13 +293,13 @@ func _physics_process(delta: float):
 			var test_vector := (- last_floor_collision.normal) if has_hit_floor else down_vector
 			
 			# this will check if the character is standing directly on a floor
-			var collision := corrected_move_and_collide(test_vector * snap_distance, true, true, true)
+			var collision := move_and_collide(test_vector * snap_distance, true, true, true)
 			
 			if has_hit_floor and collision == null:
-				collision = corrected_move_and_collide(down_vector * snap_distance, true, true, true)
+				collision = move_and_collide(down_vector * snap_distance, true, true, true)
 			
-			if collision != null and collision.is_floor():
-				floor_collision = collision
+			if collision != null and collision.normal.angle_to(up_vector) <= floor_max_angle:
+				floor_collision = CollisionData3D.new(collision, self)
 				linear_velocity = align_to_floor(linear_velocity)
 				
 				if not is_zero_approx(collision.travel.length()):
@@ -314,30 +315,6 @@ func _physics_process(delta: float):
 		last_wall_collision = wall_collision
 
 
-func corrected_move_and_collide(rel_vec: Vector3, infinite_inertia: bool = true, exclude_raycast_shapes: bool = true, test_only: bool = false) -> CollisionData3D:
-	# Fixes a bug in move_and_collide where it still slides against slopes
-	# It does this by finding the component of the collision.travel vector along the collision.normal
-	# This isn't just as simple as sliding the travel vector against the normal, as the portion of the travel vector before hitting the normal can affect the outcome
-	var collision := move_and_collide(rel_vec, infinite_inertia, exclude_raycast_shapes, test_only)
-	
-	if collision == null:
-		return null
-	
-	var slided_vector := rel_vec.slide(collision.normal)
-	var collision_data := CollisionData3D.new(collision, self)
-	var denominator := sin(slided_vector.angle_to(rel_vec))
-	
-	if denominator >= CORRECTION_DENOMINATOR_THRESHOLD:
-		var correction := slided_vector.normalized() * collision.travel.slide(rel_vec.normalized()).length() / denominator
-		
-		if not test_only:
-			global_transform.origin -= correction
-		
-		collision_data.travel -= correction
-	
-	return collision_data
-
-
 func _sort_collision(collision: KinematicCollision) -> bool:
 	if collision.normal.angle_to(up_vector) <= floor_max_angle:
 		floor_collision = CollisionData3D.new(collision, self)
@@ -348,7 +325,7 @@ func _sort_collision(collision: KinematicCollision) -> bool:
 		return false
 
 
-func _handle_bounce(collision: CollisionData3D, travel_vector: Vector3) -> Vector3:
+func _handle_bounce(collision: KinematicCollision, travel_vector: Vector3) -> Vector3:
 	travel_vector -= collision.travel
 	var factor: float
 	

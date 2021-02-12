@@ -149,10 +149,10 @@ func set_jumping(value: bool) -> void:
 					var normal
 					
 					if use_floor:
-						normal = character.floor_collision.normal.normalized()
+						normal = character.last_floor_collision.normal.normalized()
 					
 					else:
-						normal = character.wall_collision.normal.normalized()
+						normal = character.last_wall_collision.normal.normalized()
 					
 					var angle: float = abs(up_vector.angle_to(normal))
 					
@@ -190,9 +190,9 @@ func set_jumping(value: bool) -> void:
 			jumping = true
 	
 	else:
+		emit_signal("falling")
 		set_process(false)
 		jumping = false
-		emit_signal("falling")
 
 
 func _ready():

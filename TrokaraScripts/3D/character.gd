@@ -243,8 +243,8 @@ func _physics_process(delta: float):
 					linear_velocity = new_vector * linear_velocity.length()
 				
 				else:
-					is_sliding_on_floor = true
 					emit_signal("landed", get_vertical_speed())
+					is_sliding_on_floor = is_on_floor()		# must double check in case landed caused floor_collision to turn null
 					
 					if "physics_material_override" in collision.collider and collision.collider.physics_material_override != null:
 						travel_vector = _handle_bounce(collision, travel_vector)

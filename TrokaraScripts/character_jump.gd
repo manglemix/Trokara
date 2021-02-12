@@ -1,12 +1,6 @@
-# Adds dual jump functionality to the parent character
-# If jumping is set to true, then false, the character will jump to the initial_jump_height
-# If jumping is just set to true, the height will be the full_jump_height
 class_name CharacterJump
 extends Node
 
-
-enum SerialEnums {POSITION, NORMAL, TRAVEL, REMAINDER, COLLIDER, COLLIDER_SHAPE, COLLIDER_VELOCITY, COLLISION_TIME}
-enum _SurfaceType {NULL, FLOOR, WALL}
 
 signal jumped		# emitted as soon as jumping is set from false to true
 signal falling		# emitted as soon as jumping is set from true to false
@@ -18,19 +12,23 @@ export var initial_jump_height: float setget set_initial_jump_height
 export var full_jump_height: float setget set_full_jump_height
 
 # The number of jumps possible in the air
-export var extra_jumps := 1
+export var extra_jumps := 1 setget set_extra_jumps
 
 # A small period of time after falling in which you can still jump
 export var coyote_time := 0.1
 
-# if true, the initial_velocity will move towards the character's movement_vector, when jumping in the air
+export var absolute_impulse := true
+
+# if true, the initial_speed will move towards the character's movement_vector, when jumping in the air
 export var deform_to_movement := true
 
-# this value is multiplied with the movement_vector to determine how much the initial_velocity is deformed/skewed
+# this value is multiplied with the movement_vector to determine how much the initial_speed is deformed/skewed
 export var deformation_factor := 1.0
 
 # if true, the initial jump would be along the floor normal
 export var use_floor_normal := true
+
+export var use_up_vector := false
 
 # the maximum angle from the up vector that the initial impulse can be deflected by
 export var max_deflection_angle_degrees := 45.0 setget set_max_deflection_angle_degrees
@@ -44,11 +42,13 @@ export var floor_angle_factor := 0.5
 export var jump_off_wall := false
 
 # The velocity applied on the initial jump
-var initial_velocity setget set_initial_velocity
+var initial_speed: float setget set_initial_speed
 
 # The duration of the "hold" jump
 # The end of this time should be when the vertical velocity is zero
 var jump_time: float setget set_jump_time
+
+var current_jump_time: float
 
 # The acceleration applied during the "hold" jump
 var acceleration: float setget set_acceleration
@@ -59,12 +59,9 @@ var jumping := false setget set_jumping
 # the radian counterpart
 var max_deflection_angle := PI / 4 setget set_max_deflection_angle
 
-# How much time there is left for the full jump
-var _current_jump_time: float
-
 # True if the character jumped off the floor, until the character lands
 # needed to prevent the character from jumping multiple times within the coyote time
-var _initial_jumped := false
+var initial_jumped := false
 
 # current number of jumps
 onready var current_jumps := extra_jumps
@@ -73,46 +70,49 @@ onready var current_jumps := extra_jumps
 onready var character := get_parent()
 
 
+func set_extra_jumps(value: int) -> void:
+	extra_jumps = value
+	
+	if character != null and (character.is_on_floor() or (jump_off_wall and character.is_on_wall())):
+		current_jumps = value
+
+
 func set_initial_jump_height(height: float) -> void:
-	if not is_instance_valid(character):
+	if character == null:
 		yield(self, "ready")
 	
 	initial_jump_height = height
-	# sets the new initial_velocity to be the same direction as the last initial_velocity
-	if initial_velocity == null or is_zero_approx(initial_velocity.length_squared()):
-		# If the initial_velocity is empty (all values are 0), then a new vector pointing straight up
-		initial_velocity = character.up_vector * sqrt(2 * character.gravity_acceleration * height)
-		
-	else:
-		# scales the last initial_velocity according to its vertical component
-		initial_velocity *= sqrt(2 * character.gravity_acceleration * height) / character.up_vector.dot(initial_velocity)
+	initial_speed = sqrt(2 * character.gravity_acceleration * height)
 
 
 func set_full_jump_height(height: float) -> void:
-	if not is_instance_valid(character):
+	if character == null:
 		yield(self, "ready")
 	
 	# Solves for jump time using the height given
-	# Assumes that initial_speed ^ 2 / 2 (gravity - acceleration) = height
-	# and jump_time = initial_speed / (gravity - acceleration)
 	full_jump_height = height
-	var initial_speed: float = character.up_vector.dot(initial_velocity)
-	acceleration = character.gravity_acceleration - pow(initial_speed, 2) / 2 / height
+	acceleration = character.gravity_acceleration - initial_speed * initial_speed / 2 / height
 	jump_time = initial_speed / (character.gravity_acceleration - acceleration)
 
 
-func set_initial_velocity(velocity) -> void:
-	initial_velocity = velocity
-	initial_jump_height = pow(character.up_vector.dot(velocity), 2) / 2 / character.gravity_acceleration
+func set_initial_speed(speed: float) -> void:
+	if character == null:
+		yield(self, "ready")
+	
+	initial_speed = speed
+	initial_jump_height = speed * speed / 2 / character.gravity_acceleration
 
 
 func set_jump_time(value: float) -> void:
-	set_full_jump_height(character.up_vector.dot(initial_velocity) * value / 2)
+	jump_time = value
+	acceleration = character.gravity_acceleration - initial_speed / jump_time
+	full_jump_height = jump_time * (initial_speed + (character.gravity_acceleration - acceleration) / 2 * jump_time)
 
 
 func set_acceleration(value: float) -> void:
 	if value < character.gravity_acceleration:
-		set_full_jump_height(pow(character.up_vector.dot(initial_velocity), 2) / (character.gravity_acceleration - value) / 2)
+		acceleration = value
+		full_jump_height = jump_time * (initial_speed + (character.gravity_acceleration - value) / 2 * jump_time)
 	
 	else:
 		push_error("jump acceleration is higher than gravity!")
@@ -129,112 +129,92 @@ func set_max_deflection_angle(value: float) -> void:
 
 
 func set_jumping(value: bool) -> void:
+	if value == jumping:
+		return
+	
 	if value:
-		if not _initial_jumped and _can_initial_jump():
-			_initial_jumped = true
+		var system_time := OS.get_system_time_msecs()
+		var use_floor: bool = character.last_floor_collision != null and (system_time - character.last_floor_collision.collision_time) / 1000.0 <= coyote_time
+		var jump_off_surface: bool = not initial_jumped and \
+		(use_floor or jump_off_wall and character.last_wall_collision != null and (system_time - character.last_wall_collision.collision_time) / 1000.0 <= coyote_time)
+		
+		if jump_off_surface or current_jumps > 0:
+			var up_vector = character.up_vector if use_up_vector else character.global_transform.basis.y.normalized()
+			var initial_vector
+			
+			if jump_off_surface:
+				initial_jumped = true
+				
+				if use_floor_normal:
+					var normal
+					
+					if use_floor:
+						normal = character.floor_collision.normal.normalized()
+					
+					else:
+						normal = character.wall_collision.normal.normalized()
+					
+					var angle: float = abs(up_vector.angle_to(normal))
+					
+					if is_zero_approx(angle):
+						initial_vector = up_vector
+						
+					elif angle <= max_deflection_angle:
+						initial_vector = up_vector.slerp(normal, floor_angle_factor)
+					
+					else:
+						initial_vector = up_vector.slerp(normal, max_deflection_angle / angle * floor_angle_factor)
+				
+				else:
+					initial_vector = up_vector
+				
+			else:
+				initial_vector = up_vector
+				current_jumps -= 1
+			
 			character.temporary_unsnap()
-			character.linear_velocity += _calculate_impulse(true)
-		
-		elif current_jumps > 0:
-			current_jumps -= 1
-			character.linear_velocity = _calculate_impulse(false)
-		
-		_current_jump_time = jump_time
-		set_physics_process(value)
-		jumping = value
-		emit_signal("jumped")
-		
-	elif jumping:
-		set_physics_process(value)
-		jumping = value
+			var flattened_velocity = character.linear_velocity.slide(up_vector)
+			
+			if absolute_impulse:
+				character.linear_velocity = initial_speed * initial_vector
+			
+			else:
+				character.linear_velocity = flattened_velocity + initial_speed * initial_vector
+			
+			if deform_to_movement:
+				character.linear_velocity += flattened_velocity * deformation_factor
+			
+			current_jump_time = jump_time
+			emit_signal("jumped")
+			set_process(true)
+			jumping = true
+	
+	else:
+		set_process(false)
+		jumping = false
 		emit_signal("falling")
 
 
 func _ready():
-	# warning-ignore-all:return_value_discarded
-	set_physics_process(false)
 	character.connect("landed", self, "_handle_landed")
-	character.connect("touched_wall", self, "_handle_touched")
+	character.connect("touched_wall", self, "_handle_touched_wall")
+	set_process(false)
 
 
-func _physics_process(delta):
-	if _current_jump_time <= 0:
-		set_jumping(false)
-	
-	_current_jump_time -= delta
-	character.linear_velocity += character.up_vector * acceleration * delta
-
-
-func jump_to(height: float) -> void:
-	# sets jumping to true until the target height is reached, or the apex of the jump is reached
-	# if height is set to below initial_jump_height, the character will still jump to the initial_jump_height
-	var a := acceleration
-	var b: float = 2 * _calculate_impulse(not _initial_jumped and _can_initial_jump()).dot(character.up_vector)
-	var c := - 2 * (height - initial_jump_height)
-	var t := (- b + sqrt(b * b - 4 * a * c)) / 2 / a
-	
-	set_jumping(true)
-	
-	if t <= jump_time:
-		if t > 0:
-			yield(get_tree().create_timer(t), "timeout")
-		
-		set_jumping(false)
-
-
-func _handle_landed(_vertical_speed) -> void:
-	# private function to reset jumps
+func _handle_landed(_speed) -> void:
 	current_jumps = extra_jumps
-	_initial_jumped = false
+	initial_jumped = false
 
 
-func _handle_touched(_normal_speed) -> void:
-	# private function to reset jumps
+func _handle_touched_wall(_vec) -> void:
 	if jump_off_wall:
 		current_jumps = extra_jumps
-		_initial_jumped = false
+		initial_jumped = false
 
 
-func _can_initial_jump() -> int:
-	# private method to check if the character is on a floor or wall or nothing
-	# accounts for coyote time
-	var current_time := OS.get_system_time_msecs()
-	if not character.last_floor_collision.empty() and (current_time - character.last_floor_collision[SerialEnums.COLLISION_TIME]) / 1000.0 <= coyote_time:
-		return _SurfaceType.FLOOR
+func _process(delta):
+	character.linear_velocity += acceleration * (character.up_vector if use_up_vector else character.global_transform.basis.y.normalized()) * delta
+	current_jump_time -= delta
 	
-	if jump_off_wall and not character.last_wall_collision.empty() and (current_time - character.last_wall_collision[SerialEnums.COLLISION_TIME]) / 1000.0 <= coyote_time:
-		return _SurfaceType.WALL
-	
-	return _SurfaceType.NULL
-
-
-func _calculate_impulse(surface_type: int):
-	# private function which returns what would be the initial impulse based on the current parameters and floor
-	if surface_type != _SurfaceType.NULL:
-		if use_floor_normal:
-			var collision: Array = character.last_floor_collision if surface_type == _SurfaceType.FLOOR else character.last_wall_collision
-			var angle: float = character.up_vector.angle_to(collision[SerialEnums.NORMAL])
-			
-			if is_zero_approx(angle):
-				return initial_velocity
-			
-			else:
-				angle = clamp(angle, 0, max_deflection_angle) * floor_angle_factor
-				if typeof(character.up_vector) == TYPE_VECTOR3:
-					var cross_vector = character.up_vector.cross(collision[SerialEnums.NORMAL]).normalized()
-					return character.up_vector.rotated(cross_vector, angle) * initial_velocity.length()
-				
-				else:
-					return character.up_vector.rotated(angle) * initial_velocity.length()
-		
-		else:
-			return initial_velocity
-	
-	elif deform_to_movement:
-		# The impulse vector consists of the initial_velocity added with the flattened movement_vector
-		var impulse = initial_velocity + character.movement_vector.slide(character.up_vector).normalized() * character.movement_vector.length() * deformation_factor
-		# this rescales the impluse so that the vertical speed is equal to initial_velocity's vertical speed
-		return impulse * initial_velocity.dot(character.up_vector) / impulse.dot(character.up_vector)
-		
-	else:
-		return initial_velocity
+	if current_jump_time <= 0:
+		set_jumping(false)

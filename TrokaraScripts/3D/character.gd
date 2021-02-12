@@ -65,6 +65,10 @@ var last_wall_collision: CollisionData3D
 # this is so that this node does not snap to the floor when jumping upwards
 var _impulsing := false
 
+var _last_floor: Spatial
+
+var _last_floor_transform: Transform
+
 
 func set_floor_max_angle_degrees(value: float) -> void:
 	floor_max_angle_degrees = value
@@ -165,6 +169,33 @@ func _physics_process(delta: float):
 	var was_on_floor := is_on_floor()
 	var was_on_wall := is_on_wall()
 	
+	# Add static body rotation
+	if was_on_floor:
+		var collider := floor_collision.collider
+		
+		if "constant_angular_velocity" in collider:
+			rotation += collider.constant_angular_velocity * delta
+		
+		if "constant_linear_velocity" in collider:
+			travel_vector += collider.constant_linear_velocity * delta
+		
+		if _last_floor == null or collider != _last_floor:
+			_last_floor = collider
+			_last_floor_transform = collider.global_transform
+		
+		else:
+			travel_vector += collider.global_transform.xform(_last_floor_transform.affine_inverse().xform(global_transform.origin)) - global_transform.origin
+			_last_floor_transform = collider.global_transform
+	
+	else:
+		_last_floor = null
+	
+	if was_on_wall:
+		var collider := wall_collision.collider
+		
+		if "constant_angular_velocity" in collider:
+			rotation += collider.constant_angular_velocity * delta
+	
 	var is_sliding_on_floor := was_on_floor
 	var is_sliding_on_wall := was_on_wall
 	
@@ -179,45 +210,28 @@ func _physics_process(delta: float):
 	# the following is an alternative to move_and_slide, with extra functionality to avoid many inconsistencies in the physics engine
 	for _slide_count in range(max_slides):
 		var friction_factor := 1.0
-		var extra_velocity: Vector3
 		
-		if is_on_floor():
+		if is_sliding_on_floor:
 			var collider := floor_collision.collider
 			
 			if "physics_material_override" in collider and collider.physics_material_override != null:
 				friction_factor = 1 - collider.physics_material_override.friction
-			
-			if "linear_velocity" in collider:
-				extra_velocity = collider.linear_velocity * delta
-			
-			elif collider is StaticBody:
-				extra_velocity = collider.constant_linear_velocity * delta
-				rotation += collider.constant_angular_velocity * delta
 		
-		if is_on_wall():
+		if is_sliding_on_wall:
 			var collider := wall_collision.collider
 			
 			if "physics_material_override" in collider and collider.physics_material_override != null:
 				friction_factor *= 1 - collider.physics_material_override.friction
-			
-			if "linear_velocity" in collider:
-				extra_velocity = collider.linear_velocity * delta
-			
-			elif collider is StaticBody:
-				extra_velocity = collider.constant_linear_velocity * delta
-				rotation += collider.constant_angular_velocity * delta
 		
 		if is_zero_approx(travel_vector.length()):
 			break
 		
-		var final_vector := travel_vector * friction_factor + extra_velocity
-		var collision := corrected_move_and_collide(final_vector)
+		var collision := corrected_move_and_collide(travel_vector * friction_factor)
 		
 		if collision == null:
 			break
 		
 		else:
-			collision.travel -= collision.travel.length() / final_vector.length() * extra_velocity
 			collision.travel /= friction_factor
 			
 			if collision.is_floor():

@@ -4,7 +4,7 @@ extends Node
 
 
 export var movement_source_path: NodePath = ".."			# The path to the node which has a movement_vector (usually the character; modifying this after _ready has no effect)
-export var use_true_movement := false						# If true, the parent will face the direction the movement source is actually moving (useful when you want the character to face along the wall when sliding on it)
+export var use_true_movement := true						# If true, the parent will face the direction the movement source is actually moving (useful when you want the character to face along the wall when sliding on it)
 export var enable_pitch_rotation := false					# If true, the parent will be able to turn up and down to face the movement_vector
 export(float, 0, 1) var interpolation_weight := 0.1			# If interpolation is not desired, set to 1
 export var threshold := 0.0									# Will only rotate if the movement_vector is faster than this

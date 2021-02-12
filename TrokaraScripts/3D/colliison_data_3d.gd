@@ -8,7 +8,7 @@ var position: Vector3
 var normal: Vector3
 var travel: Vector3
 var remainder: Vector3
-var collider: Node
+var collider: Spatial
 var collider_shape: Object
 var collider_velocity: Vector3
 var collision_time: int

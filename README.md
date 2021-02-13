@@ -4,9 +4,9 @@
 A versatile and well documented package for developing terrestrial characters
 
 # IMPORTANT NOTICE
-### Trokara is undergoing an api_change. Most of the code will be refactored, and a few old functionalities will be removed, \
-### while making way for new improvements. If you would like to see these changes, use the api_change branch. \
-### Do note however, this branch is subject to many changes
+Trokara is undergoing an api_change. Most of the code will be refactored, and a few old functionalities will be removed, \
+while making way for new improvements. If you would like to see these changes, use the api_change branch. \
+Do note however, this branch is subject to many changes
 
 ## Table of contents
 * [General info](#general-info)

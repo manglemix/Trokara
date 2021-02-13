@@ -3,6 +3,11 @@
 # Trokara
 A versatile and well documented package for developing terrestrial characters
 
+# IMPORTANT NOTICE
+### Trokara is undergoing an api_change. Most of the code will be refactored, and a few old functionalities will be removed,
+### while making way for new improvements. If you would like to see these changes, use the api_change branch.
+### Do note however, this branch is subject to many changes
+
 ## Table of contents
 * [General info](#general-info)
 * [Screenshots](#screenshots)
@@ -45,10 +50,12 @@ List of features ready and TODOs for future development
 * Plenty of comments (feel free to contact me with any questions)
 * 100% GDscript; Source code fully available!
 
-Features to be added (open to other contributors!):
-* Wall Running
-* Modular Animation Script (still waiting for ideas!)
-* Intuitive character importer
+Features currently being finalised!
+* ZERO deviance on complex terrain
+* Functioning Wall jumping
+* Support for PhysicsMaterials (Bounce, friction)
+* Support for moving platforms (Translation, Rotation)
+* Support for constant_linear_velocity and constant_angular_velocity
 
 ## Status
 Project is: _in progress_ \

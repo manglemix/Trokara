@@ -30,7 +30,7 @@ export var max_slides := 4
 
 # the radian counterpart
 var floor_max_angle := PI / 4 setget set_floor_max_angle
-
+ 
 # The speed and direction this character is moving towards. Do not set this directly if snapped to floor, use apply_impulse
 # Keep in mind this is not always the true linear_velocity of the character
 # It is not inclusive of friction, or the velocity of the platform the character may be on
@@ -301,21 +301,6 @@ func _physics_process(delta: float):
 					linear_velocity = linear_velocity.slide(collision.normal)
 					travel_vector = (travel_vector - collision.travel).slide(collision.normal)
 	
-	# wall tracking
-	# so that even if the character isn't moving but is next to a wall, wall_collision will still update
-	if wall_collision == tmp_wall_collision:
-		wall_collision = null
-		
-		if track_wall and was_on_wall and last_wall_collision != null:
-			var collision := move_and_collide(- last_wall_collision.normal * get("collision/safe_margin"), true, true, true)
-			
-			if collision != null:
-				if collision.normal.angle_to(up_vector) <= floor_max_angle:
-					floor_collision = CollisionData3D.new(collision, self)
-				
-				else:
-					wall_collision = CollisionData3D.new(collision, self)
-	
 	# floor tracking
 	if floor_collision == tmp_floor_collision:
 		floor_collision = null
@@ -339,6 +324,27 @@ func _physics_process(delta: float):
 				
 				if not is_zero_approx(collision.travel.length()):
 					global_transform.origin += collision.travel
+	
+	# wall tracking
+	# so that even if the character isn't moving but is next to a wall, wall_collision will still update
+	if wall_collision == tmp_wall_collision:
+		wall_collision = null
+		
+		if track_wall and was_on_wall and last_wall_collision != null:
+			var collision: KinematicCollision
+			
+			if is_on_floor():
+				collision = move_and_collide(- last_wall_collision.normal.slide(floor_collision.normal).normalized() * get("collision/safe_margin"), true, true, true)
+			
+			else:
+				collision = move_and_collide(- last_wall_collision.normal * get("collision/safe_margin"), true, true, true)
+			
+			if collision != null:
+				if collision.normal.angle_to(up_vector) <= floor_max_angle:
+					floor_collision = CollisionData3D.new(collision, self)
+				
+				else:
+					wall_collision = CollisionData3D.new(collision, self)
 	
 	if is_on_floor():
 		last_floor_collision = floor_collision

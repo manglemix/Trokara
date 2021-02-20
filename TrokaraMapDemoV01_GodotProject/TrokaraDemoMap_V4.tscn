@@ -1,14 +1,17 @@
-[gd_scene load_steps=45 format=2]
+[gd_scene load_steps=46 format=2]
 
-[ext_resource path="res://BMat_Map.material" type="Material" id=1]
-[ext_resource path="res://ColorsMat/Col_Orange.material" type="Material" id=2]
-[ext_resource path="res://ColorsMat/Col_Green.material" type="Material" id=3]
-[ext_resource path="res://ColorsMat/Col_Red.material" type="Material" id=4]
-[ext_resource path="res://ColorsMat/Col_LightGreen.material" type="Material" id=5]
-[ext_resource path="res://ColorsMat/col_LightBlue.tres" type="Material" id=6]
-[ext_resource path="res://ColorsMat/col_Blue.tres" type="Material" id=7]
+[ext_resource path="res://TrokaraMapDemoV01_GodotProject/BMat_Map.material" type="Material" id=1]
+[ext_resource path="res://TrokaraMapDemoV01_GodotProject/ColorsMat/Col_Orange.material" type="Material" id=2]
+[ext_resource path="res://TrokaraMapDemoV01_GodotProject/ColorsMat/Col_Green.material" type="Material" id=3]
+[ext_resource path="res://TrokaraMapDemoV01_GodotProject/ColorsMat/Col_Red.material" type="Material" id=4]
+[ext_resource path="res://TrokaraMapDemoV01_GodotProject/ColorsMat/Col_LightGreen.material" type="Material" id=5]
+[ext_resource path="res://TrokaraMapDemoV01_GodotProject/ColorsMat/col_LightBlue.tres" type="Material" id=6]
+[ext_resource path="res://TrokaraMapDemoV01_GodotProject/ColorsMat/col_Blue.tres" type="Material" id=7]
+
+
 
 [sub_resource type="PhysicsMaterial" id=1]
+friction = 0.0
 
 [sub_resource type="ArrayMesh" id=2]
 surfaces/0 = {
@@ -131,6 +134,17 @@ size = Vector3( 10, 30, 10 )
 
 [sub_resource type="BoxShape" id=33]
 extents = Vector3( 5, 15, 5 )
+
+[sub_resource type="GDScript" id=38]
+script/source = "extends StaticBody
+
+
+export var rotation_speed := 2.0
+
+
+func _physics_process(delta):
+	rotation.y += rotation_speed * delta
+"
 
 [sub_resource type="ArrayMesh" id=34]
 surfaces/0 = {
@@ -465,9 +479,9 @@ __meta__ = {
 "_edit_lock_": true
 }
 
-[node name="Turnstile" type="RigidBody" parent="Elements/Room6-Turnstile"]
+[node name="Turnstile" type="StaticBody" parent="Elements/Room6-Turnstile"]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 3.26797, 0.915619, 0 )
-custom_integrator = true
+script = SubResource( 38 )
 
 [node name="Turnstile_mesh" type="MeshInstance" parent="Elements/Room6-Turnstile/Turnstile"]
 transform = Transform( 0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 0, 10.7516, 0 )

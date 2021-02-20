@@ -94,11 +94,6 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://TrokaraScripts/3D/scrollable_kinematic_arm.gd"
 }, {
-"base": "Spatial",
-"class": "TransformReceiver",
-"language": "GDScript",
-"path": "res://LegacyScripts/transform_receiver.gd"
-}, {
 "base": "Control",
 "class": "VelocityMeter",
 "language": "GDScript",
@@ -122,7 +117,6 @@ _global_script_class_icons={
 "PivotPoint": "",
 "PointingNode": "",
 "ScrollableKinematicArm": "",
-"TransformReceiver": "",
 "VelocityMeter": ""
 }
 

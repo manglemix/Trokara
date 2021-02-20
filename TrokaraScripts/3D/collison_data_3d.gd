@@ -28,7 +28,7 @@ func _init(kinematic_collision: KinematicCollision, _character: KinematicBody):
 
 
 func is_floor() -> bool:
-	return normal.angle_to(character.up_vector) <= character.floor_max_angle
+	return normal.angle_to(character.up_vector) < character.floor_max_angle
 
 
 func is_ceiling() -> bool:

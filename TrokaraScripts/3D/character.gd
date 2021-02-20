@@ -3,6 +3,10 @@ class_name Character3D
 extends KinematicBody
 
 
+# Used in main movement code when colliding with walls
+# Basically its the threshold used to determine when not to recalculate the travel_vector when sliding against walls
+const SLIDE_DOT_THRESHOLD := sin(deg2rad(2))
+
 # emitted when this node contacts a floor or a slope; vertical_speed is the speed along the up_vector at the moment of collision
 signal landed(vertical_speed)
 
@@ -235,7 +239,7 @@ func _physics_process(delta: float):
 			var collider := wall_collision.collider
 			
 			# (_slide_count != 0 or travel_vector.normalized().dot(wall_collision.normal) < 0) is to remove a bug where
-			# if the friction is 1, track_wall is true, and the character is movign away from the wall,
+			# if the friction is 1, track_wall is true, and the character is moving away from the wall,
 			# the character will still be stuck to the wall
 			if (_slide_count != 0 or travel_vector.normalized().dot(wall_collision.normal) < 0) and "physics_material_override" in collider and collider.physics_material_override != null:
 				friction_factor *= 1 - collider.physics_material_override.friction
@@ -253,7 +257,7 @@ func _physics_process(delta: float):
 			collision = CollisionData3D.new(collision, self)
 			collision.travel /= friction_factor
 			
-			if collision.normal.angle_to(up_vector) <= floor_max_angle:
+			if collision.normal.angle_to(up_vector) < floor_max_angle:
 				floor_collision = collision
 				
 				if is_sliding_on_floor:
@@ -268,8 +272,12 @@ func _physics_process(delta: float):
 					emit_signal("landed", get_vertical_speed())
 					is_sliding_on_floor = is_on_floor()		# must double check in case landed caused floor_collision to turn null
 					
+					if not is_sliding_on_floor:
+						# There could be no floor because as soon as we land we jump
+						pass
+					
 					# check for bounce
-					if "physics_material_override" in collision.collider and collision.collider.physics_material_override != null:
+					elif "physics_material_override" in collision.collider and collision.collider.physics_material_override != null:
 						travel_vector = _handle_bounce(collision, travel_vector)
 					
 					else:
@@ -284,10 +292,15 @@ func _physics_process(delta: float):
 				
 				wall_collision = collision
 				
-				if is_sliding_on_floor:
+				if abs(travel_vector.normalized().dot(collision.normal)) < SLIDE_DOT_THRESHOLD:
+					# There is a small bug in godot where even if you move exactly perpendicular to the wall normal,
+					# You can still collide with it. If that's the case, just ignore that collision
+					travel_vector -= collision.travel
+					
+				elif is_sliding_on_floor:
 					# if we're on a floor, and we hit a wall, we correct the new movement_vector so that it doesn't move up the wall
 					# such is the case for steep walls
-					travel_vector -= collision.travel
+					global_transform.origin -= collision.travel
 					var corrected_normal: Vector3 = collision.normal.slide(up_vector).normalized()
 					travel_vector = (travel_vector.slide(up_vector).normalized() * travel_vector.length()).slide(corrected_normal)
 					linear_velocity = (linear_velocity.slide(up_vector).normalized() * linear_velocity.length()).slide(corrected_normal)
@@ -301,50 +314,64 @@ func _physics_process(delta: float):
 					linear_velocity = linear_velocity.slide(collision.normal)
 					travel_vector = (travel_vector - collision.travel).slide(collision.normal)
 	
+	# We check if the wall collision has been updated
+	# If it's not been updated, then no wall was hit
+	if wall_collision == tmp_wall_collision:
+		wall_collision = null
+	
 	# floor tracking
+	# If the floor collision did not change in this frame, it definitely means that no floor was touched
+	# This is because floor_collision is not the collider itself but the collision data
+	# If a new collision was made the data would update even if it's the same collider (things like position would change)
 	if floor_collision == tmp_floor_collision:
 		floor_collision = null
-		
+
 		if was_on_floor:
 			# this is the adaptive floor snappin
 			# checks in the direction of the last floor first
 			var has_hit_floor := last_floor_collision != null
 			var test_vector := (- last_floor_collision.normal) if has_hit_floor else down_vector
-			
+
+			if is_on_wall():
+				test_vector = test_vector.slide(wall_collision.normal).normalized()
+
 			var collision := move_and_collide(test_vector * snap_distance, true, true, true)
-			
+
 			# if there was no floor, and we used the last floor normal, check downwards
 			if has_hit_floor and collision == null:
-				collision = move_and_collide(down_vector * snap_distance, true, true, true)
-			
+				if is_on_wall():
+					test_vector = down_vector.slide(wall_collision.normal).normalized()
+
+				else:
+					test_vector = down_vector
+				
+				collision = move_and_collide(test_vector * snap_distance, true, true, true)
+
 			# if it is a floor, move down to it and align the linear velocity to it
-			if collision != null and collision.normal.angle_to(up_vector) <= floor_max_angle:
+			if collision != null and collision.normal.angle_to(up_vector) < floor_max_angle:
 				floor_collision = CollisionData3D.new(collision, self)
 				linear_velocity = align_to_floor(linear_velocity)
-				
+
 				if not is_zero_approx(collision.travel.length()):
-					global_transform.origin += collision.travel
+					global_transform.origin += collision.travel.project(test_vector)
 	
 	# wall tracking
 	# so that even if the character isn't moving but is next to a wall, wall_collision will still update
-	if wall_collision == tmp_wall_collision:
-		wall_collision = null
+	if track_wall and not is_on_wall() and was_on_wall and last_wall_collision != null:
+		var collision: KinematicCollision
 		
-		if track_wall and was_on_wall and last_wall_collision != null:
-			var collision: KinematicCollision
-			
-			if is_on_floor():
-				collision = move_and_collide(- last_wall_collision.normal.slide(floor_collision.normal).normalized() * get("collision/safe_margin"), true, true, true)
+		if is_on_floor():
+			collision = move_and_collide(- last_wall_collision.normal.slide(floor_collision.normal).normalized() * get("collision/safe_margin"), true, true, true)
+		
+		else:
+			collision = move_and_collide(- last_wall_collision.normal * get("collision/safe_margin"), true, true, true)
+		
+		if collision != null:
+			if collision.normal.angle_to(up_vector) <= floor_max_angle:
+				floor_collision = CollisionData3D.new(collision, self)
 			
 			else:
-				collision = move_and_collide(- last_wall_collision.normal * get("collision/safe_margin"), true, true, true)
-			
-			if collision != null:
-				if collision.normal.angle_to(up_vector) <= floor_max_angle:
-					floor_collision = CollisionData3D.new(collision, self)
-				
-				else:
-					wall_collision = CollisionData3D.new(collision, self)
+				wall_collision = CollisionData3D.new(collision, self)
 	
 	if is_on_floor():
 		last_floor_collision = floor_collision

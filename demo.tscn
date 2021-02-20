@@ -29,6 +29,9 @@ func _input(event):
 	elif event.is_action_pressed(\"mouse lock\"):
 		pivot_node.accept_input = not pivot_node.accept_input
 	
+	elif event is InputEventMouseButton and event.button_index == BUTTON_LEFT:
+		pivot_node.accept_input = true
+	
 	elif event.is_action_pressed(\"fps\") and has_node(\"TPSDemo\"):
 		var fps: Spatial = FPS.instance()
 		add_child(fps)
@@ -65,7 +68,7 @@ script = SubResource( 1 )
 environment = SubResource( 3 )
 
 [node name="TPSDemo" parent="." instance=ExtResource( 1 )]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.341553, 6.30349, 1.80824 )
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 79.0359, 6.30348, 65.5047 )
 floor_max_angle_degrees = 45.0
 
 [node name="CanvasLayer" type="Control" parent="TPSDemo"]

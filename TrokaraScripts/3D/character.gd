@@ -16,9 +16,6 @@ signal touched_wall(normal_velocity)
 # multiplied with the project's gravity, useful for parachutes
 export var gravity_factor := 1.0 setget set_gravity_factor
 
-# if true, this node will try to stick to the ground, if the ground is within the snap distance
-export var snap_to_floor := true
-
 # used in move_and_slide_with_snap to stick to the floor (the export hint can be changed if needed)
 export(float, 0, 10) var snap_distance := 0.05
 
@@ -144,10 +141,7 @@ func align_to_floor(vector: Vector3) -> Vector3:
 func temporary_unsnap() -> void:
 	# Call this method before changing linear_velocity if the character is on the floor
 	# this ensures that you can jump without remaining snapped
-	if snap_to_floor:
-		_impulsing = true
-		snap_to_floor = false
-		floor_collision = null
+	_impulsing = true
 
 
 func _integrate_movement(vector: Vector3, _delta: float) -> Vector3:
@@ -239,7 +233,6 @@ func _physics_process(delta: float):
 	
 	if not is_sliding_on_floor and _impulsing:
 		_impulsing = false
-		snap_to_floor = true
 	
 	# main movement code
 	# I stayed away from move_and_slide_and_snap as it caused this node to slide down slopes even if stop on slope was true (and there was downward velocity)
@@ -292,8 +285,8 @@ func _physics_process(delta: float):
 				
 				else:
 					# if we weren't on a floor, emit the landed signal
-					emit_signal("landed", get_vertical_speed())
-					is_sliding_on_floor = is_on_floor()		# must double check in case landed caused floor_collision to turn null
+					is_sliding_on_floor = true
+					emit_signal("landed", linear_velocity.dot(up_vector))
 					
 					if not is_sliding_on_floor:
 						# There could be no floor because as soon as we land we jump
@@ -351,7 +344,12 @@ func _physics_process(delta: float):
 		floor_collision = null
 
 		if was_on_floor:
-			if snap_to_floor:
+			if _impulsing:
+				print("lol")
+				linear_velocity += floor_velocity
+				floor_velocity = Vector3.ZERO
+			
+			else:
 				# this is the adaptive floor snapping
 				# checks in the direction of the last floor first
 				var has_hit_floor := last_floor_collision != null
@@ -383,10 +381,6 @@ func _physics_process(delta: float):
 				else:
 					linear_velocity += floor_velocity
 					floor_velocity = Vector3.ZERO
-				
-			else:
-				linear_velocity += floor_velocity
-				floor_velocity = Vector3.ZERO
 	
 	# wall tracking
 	# so that even if the character isn't moving but is next to a wall, wall_collision will still update

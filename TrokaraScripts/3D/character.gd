@@ -3,8 +3,8 @@ class_name Character3D
 extends KinematicBody
 
 
-# Used in main movement code when colliding with walls
-# Basically its the threshold used to determine when not to recalculate the travel_vector when sliding against walls
+# Used in main movement code when colliding
+# Basically its the threshold used to determine when not to recalculate the travel_vector when sliding against surfaces
 const SLIDE_DOT_THRESHOLD := sin(deg2rad(2))
 
 # emitted when this node contacts a floor or a slope; vertical_speed is the speed along the up_vector at the moment of collision
@@ -52,6 +52,8 @@ var up_vector: Vector3 = - down_vector setget set_up_vector
 
 # the acceleration at which this node descends at
 var gravity_acceleration: float = ProjectSettings.get_setting("physics/3d/default_gravity") setget set_gravity_acceleration
+
+var floor_velocity: Vector3
 
 # contains information about the collision with a floor in each frame
 # floors are slopes whose incline is less than floor_max_angle
@@ -168,6 +170,22 @@ func is_on_wall() -> bool:
 	return wall_collision != null
 
 
+func get_floor_velocity() -> Vector3:
+	return floor_velocity
+
+
+func get_slide_collision(idx: int) -> KinematicCollision:
+	# Since we don't use move_and_slide, there should be no use of this
+	push_warning("Attempted to use unimplemented method get_slide_collision in Character")
+	return null
+
+
+func get_slide_count() -> int:
+	# Since we don't use move_and_slide, there should be no use of this
+	push_warning("Attempted to use unimplemented method get_slide_count in Character")
+	return 0
+
+
 func _physics_process(delta: float):
 	# warning-ignore-all:return_value_discarded
 	linear_velocity = _integrate_movement(movement_vector, delta)
@@ -198,7 +216,9 @@ func _physics_process(delta: float):
 
 		else:
 			# We compare the difference from the current position to where the current position should've been based on the last transform of the floor
-			travel_vector += collider.global_transform.xform(_last_floor_transform.affine_inverse().xform(global_transform.origin)) - global_transform.origin
+			floor_velocity = collider.global_transform.xform(_last_floor_transform.affine_inverse().xform(global_transform.origin)) - global_transform.origin
+			travel_vector += floor_velocity
+			floor_velocity /= delta
 			_last_floor_transform = collider.global_transform
 
 	else:
@@ -260,7 +280,10 @@ func _physics_process(delta: float):
 			if collision.normal.angle_to(up_vector) < floor_max_angle:
 				floor_collision = collision
 				
-				if is_sliding_on_floor:
+				if abs(travel_vector.normalized().dot(collision.normal)) < SLIDE_DOT_THRESHOLD:
+					travel_vector -= collision.travel
+					
+				elif is_sliding_on_floor:
 					# If moving on a floor, and we hit another floor, rotate the movement_vector towards the up_vector such that the new vector is along the floor plane
 					# This is better than just sliding the movement_vector as that can be deflected to the side
 					var new_vector := up_vector.cross(travel_vector).cross(collision.normal).normalized()
@@ -323,37 +346,47 @@ func _physics_process(delta: float):
 	# If the floor collision did not change in this frame, it definitely means that no floor was touched
 	# This is because floor_collision is not the collider itself but the collision data
 	# If a new collision was made the data would update even if it's the same collider (things like position would change)
-	if floor_collision == tmp_floor_collision:
+	# floor_collision could be null even if tmp_floor_collision wasn't if something happend during the "landed" signal (like jumping)
+	if floor_collision == null or floor_collision == tmp_floor_collision:
 		floor_collision = null
 
 		if was_on_floor:
-			# this is the adaptive floor snappin
-			# checks in the direction of the last floor first
-			var has_hit_floor := last_floor_collision != null
-			var test_vector := (- last_floor_collision.normal) if has_hit_floor else down_vector
+			if snap_to_floor:
+				# this is the adaptive floor snapping
+				# checks in the direction of the last floor first
+				var has_hit_floor := last_floor_collision != null
+				var test_vector := (- last_floor_collision.normal) if has_hit_floor else down_vector
 
-			if is_on_wall():
-				test_vector = test_vector.slide(wall_collision.normal).normalized()
-
-			var collision := move_and_collide(test_vector * snap_distance, true, true, true)
-
-			# if there was no floor, and we used the last floor normal, check downwards
-			if has_hit_floor and collision == null:
 				if is_on_wall():
-					test_vector = down_vector.slide(wall_collision.normal).normalized()
+					test_vector = test_vector.slide(wall_collision.normal).normalized()
 
-				else:
-					test_vector = down_vector
+				var collision := move_and_collide(test_vector * snap_distance, true, true, true)
+
+				# if there was no floor, and we used the last floor normal, check downwards
+				if has_hit_floor and collision == null:
+					if is_on_wall():
+						test_vector = down_vector.slide(wall_collision.normal).normalized()
+
+					else:
+						test_vector = down_vector
+					
+					collision = move_and_collide(test_vector * snap_distance, true, true, true)
+
+				# if it is a floor, move down to it and align the linear velocity to it
+				if collision != null and collision.normal.angle_to(up_vector) < floor_max_angle:
+					floor_collision = CollisionData3D.new(collision, self)
+					linear_velocity = align_to_floor(linear_velocity)
+
+					if not is_zero_approx(collision.travel.length()):
+						global_transform.origin += collision.travel.project(test_vector)
 				
-				collision = move_and_collide(test_vector * snap_distance, true, true, true)
-
-			# if it is a floor, move down to it and align the linear velocity to it
-			if collision != null and collision.normal.angle_to(up_vector) < floor_max_angle:
-				floor_collision = CollisionData3D.new(collision, self)
-				linear_velocity = align_to_floor(linear_velocity)
-
-				if not is_zero_approx(collision.travel.length()):
-					global_transform.origin += collision.travel.project(test_vector)
+				else:
+					linear_velocity += floor_velocity
+					floor_velocity = Vector3.ZERO
+				
+			else:
+				linear_velocity += floor_velocity
+				floor_velocity = Vector3.ZERO
 	
 	# wall tracking
 	# so that even if the character isn't moving but is next to a wall, wall_collision will still update

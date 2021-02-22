@@ -11,7 +11,7 @@ var _last_release_time: int		# used for jump buffering
 
 func _input(event):
 	if event.is_action_pressed("jump"):
-		if not _initial_jumped or current_jumps > 0:
+		if not initial_jumped or current_jumps > 0:
 			set_jumping(true)
 	
 		else:

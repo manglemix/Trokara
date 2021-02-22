@@ -9,22 +9,27 @@
 config_version=4
 
 _global_script_classes=[ {
-"base": "KinematicBody",
-"class": "Character",
-"language": "GDScript",
-"path": "res://TrokaraScripts/3D/character.gd"
-}, {
 "base": "KinematicBody2D",
 "class": "Character2D",
 "language": "GDScript",
 "path": "res://TrokaraScripts/2D/character2d.gd"
+}, {
+"base": "KinematicBody",
+"class": "Character3D",
+"language": "GDScript",
+"path": "res://TrokaraScripts/3D/character.gd"
 }, {
 "base": "Node",
 "class": "CharacterJump",
 "language": "GDScript",
 "path": "res://TrokaraScripts/character_jump.gd"
 }, {
-"base": "Character",
+"base": "Node",
+"class": "CharacterMovement2D",
+"language": "GDScript",
+"path": "res://TrokaraScripts/2D/character_movement_2d.gd"
+}, {
+"base": "Character3D",
 "class": "ClassicCharacter",
 "language": "GDScript",
 "path": "res://TrokaraScripts/3D/classic_character.gd"
@@ -33,6 +38,11 @@ _global_script_classes=[ {
 "class": "ClassicCharacter2D",
 "language": "GDScript",
 "path": "res://TrokaraScripts/2D/classic_character_2d.gd"
+}, {
+"base": "Resource",
+"class": "CollisionData3D",
+"language": "GDScript",
+"path": "res://TrokaraScripts/3D/collison_data_3d.gd"
 }, {
 "base": "CharacterJump",
 "class": "ControllableCharacterJump",
@@ -89,22 +99,18 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://TrokaraScripts/3D/scrollable_kinematic_arm.gd"
 }, {
-"base": "Spatial",
-"class": "TransformReceiver",
-"language": "GDScript",
-"path": "res://LegacyScripts/transform_receiver.gd"
-}, {
 "base": "Control",
 "class": "VelocityMeter",
 "language": "GDScript",
 "path": "res://velocitymeter.gd"
 } ]
 _global_script_class_icons={
-"Character": "",
 "Character2D": "",
+"Character3D": "",
 "CharacterJump": "",
 "ClassicCharacter": "",
 "ClassicCharacter2D": "",
+"CollisionData3D": "",
 "ControllableCharacterJump": "",
 "ControllablePivot": "",
 "CopyBasis": "",
@@ -116,7 +122,6 @@ _global_script_class_icons={
 "PivotPoint": "",
 "PointingNode": "",
 "ScrollableKinematicArm": "",
-"TransformReceiver": "",
 "VelocityMeter": ""
 }
 
@@ -175,6 +180,16 @@ fps={
 tps={
 "deadzone": 0.5,
 "events": [ Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"alt":false,"shift":false,"control":false,"meta":false,"command":false,"pressed":false,"scancode":50,"unicode":0,"echo":false,"script":null)
+ ]
+}
+fullscreen={
+"deadzone": 0.5,
+"events": [ Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"alt":false,"shift":false,"control":false,"meta":false,"command":false,"pressed":false,"scancode":16777254,"unicode":0,"echo":false,"script":null)
+ ]
+}
+"mouse lock"={
+"deadzone": 0.5,
+"events": [ Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"alt":false,"shift":false,"control":false,"meta":false,"command":false,"pressed":false,"scancode":16777240,"unicode":0,"echo":false,"script":null)
  ]
 }
 

@@ -85,22 +85,26 @@ func _physics_process(delta):
 		var arm_vector := - global_transform.basis.z * current_length
 		var perpendicular_arm_length := arm_vector.dot(collision_info.normal)		# perpendicular length of the arm to the wall
 		var perpendicular_distance := collision_info.normal.dot(relative_origin)	# perpendicular length of the part of the arm outside the wall
-		var ratio := abs(perpendicular_distance / perpendicular_arm_length)			# this is used to resize the arm such that the new end is outside the wall
-		# this vector moves the kinematic obdy along the wall to reach the intersection point of the arm
-		var correction_vector := arm_vector.slide(collision_info.normal) * ratio + relative_origin.slide(collision_info.normal)
 		
-		if correction_vector.dot(arm_vector) > 0:
-			# if the arm is moving away from the origin, reset
+		if perpendicular_arm_length == 0:
 			_reset_kinematic_body()
-		
+			
 		else:
-			# warning-ignore:return_value_discarded
-			kinematic_body.move_and_collide(correction_vector)
-			current_length *= ratio
-			_update_children()
+			var ratio := abs(perpendicular_distance / perpendicular_arm_length)			# this is used to resize the arm such that the new end is outside the wall
+			# this vector moves the kinematic obdy along the wall to reach the intersection point of the arm
+			var correction_vector := arm_vector.slide(collision_info.normal) * ratio + relative_origin.slide(collision_info.normal)
+			
+			if correction_vector.dot(arm_vector) > 0:
+				# if the arm is moving away from the origin, reset
+				_reset_kinematic_body()
+				return
+			
+			else:
+				# warning-ignore:return_value_discarded
+				kinematic_body.move_and_collide(correction_vector)
+				current_length *= ratio
 	
-	else:
-		_update_children()
+	_update_children()
 
 
 func _update_children() -> void:

@@ -1,7 +1,7 @@
 # Extends the character script to have more natural movement through interpolation
 # Also adds air strafing, which also prevents infinite speeds
 class_name ClassicCharacter
-extends Character
+extends Character3D
 
 
 export(float, 0, 1000) var acceleration_weight := 12.0				# weight used to interpolate velocity to the movement vector
@@ -53,10 +53,10 @@ func _integrate_movement(vector: Vector3, delta: float) -> Vector3:
 		var new_velocity := linear_velocity.linear_interpolate(align_to_floor(vector), 1.0 - exp(- (acceleration_weight if vector.length() >= linear_velocity.length() else brake_weight) * delta))
 		
 		if enable_slope_resistance and new_velocity.normalized().dot(up_vector) > 0:
-			var cross_vector := up_vector.cross(floor_collision[SerialEnums.NORMAL]).normalized()
+			var cross_vector := up_vector.cross(floor_collision.normal).normalized()
 			if cross_vector.is_normalized():
 				var slided_vector := new_velocity.slide(cross_vector)
-				return new_velocity - slided_vector * clamp((floor_collision[SerialEnums.NORMAL].angle_to(up_vector) - min_resistance_angle) / (floor_max_angle - min_resistance_angle) * resistance_factor, 0, 1)
+				return new_velocity - slided_vector * clamp((floor_collision.normal.angle_to(up_vector) - min_resistance_angle) / (floor_max_angle - min_resistance_angle) * resistance_factor, 0, 1)
 		
 		return new_velocity
 	

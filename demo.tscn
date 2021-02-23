@@ -1,7 +1,7 @@
 [gd_scene load_steps=7 format=2]
 
 [ext_resource path="res://Gobot/tps_demo.tscn" type="PackedScene" id=1]
-[ext_resource path="res://TrokaraMapDemoV01_GodotProject/TrokaraDemoMap_V4.tscn" type="PackedScene" id=2]
+[ext_resource path="res://TrokaraMapDemoV01_GodotProject/TrokaraDemoMap.tscn" type="PackedScene" id=2]
 [ext_resource path="res://velocitymeter.gd" type="Script" id=5]
 
 [sub_resource type="GDScript" id=1]
@@ -68,8 +68,7 @@ script = SubResource( 1 )
 environment = SubResource( 3 )
 
 [node name="TPSDemo" parent="." instance=ExtResource( 1 )]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 79.0359, 6.30348, 65.5047 )
-floor_max_angle_degrees = 45.0
+transform = Transform( -4.37114e-08, 0, -1, 0, 1, 0, 1, 0, -4.37114e-08, -0.0518563, 0, -0.173705 )
 
 [node name="CanvasLayer" type="Control" parent="TPSDemo"]
 script = ExtResource( 5 )

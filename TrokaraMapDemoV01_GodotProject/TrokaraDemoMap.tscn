@@ -1,4 +1,4 @@
-[gd_scene load_steps=46 format=2]
+[gd_scene load_steps=45 format=2]
 
 [ext_resource path="res://TrokaraMapDemoV01_GodotProject/ColorsMat/col_Blue.tres" type="Material" id=1]
 [ext_resource path="res://TrokaraMapDemoV01_GodotProject/ColorsMat/Col_LightGreen.material" type="Material" id=2]
@@ -73,17 +73,12 @@ extents = Vector3( 10, 2.5, 20 )
 extents = Vector3( 10, 2.5, 20 )
 
 [sub_resource type="PhysicsMaterial" id=14]
-friction = 0.5
 
 [sub_resource type="CubeMesh" id=15]
 size = Vector3( 20, 4, 40 )
 
 [sub_resource type="ConvexPolygonShape" id=16]
 points = PoolVector3Array( -9.37945, -2, -18.6167, -9.37945, -2, 18.6167, -9.22172, 2, -18.3064, -9.22172, 2, 18.3064, 9.38966, 2, -18.3064, 9.38966, 2, 18.3064, 9.54739, -2, -18.6167, 9.54739, -2, 18.6167 )
-
-[sub_resource type="PhysicsMaterial" id=38]
-friction = 0.0
-bounce = 0.9
 
 [sub_resource type="SphereMesh" id=17]
 radius = 20.0
@@ -223,27 +218,29 @@ material/0 = null
 [node name="CollisionShape" type="CollisionShape" parent="Elements/Room1-Platforms/Platform_03"]
 shape = SubResource( 5 )
 
-[node name="Platform_04" type="RigidBody" parent="Elements/Room1-Platforms"]
+[node name="HingeJoint" type="HingeJoint" parent="Elements/Room1-Platforms"]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 5.69563, -5.82314, -67.0164 )
-collision_layer = 3
-collision_mask = 3
-custom_integrator = true
-can_sleep = false
-axis_lock_linear_x = true
-axis_lock_linear_y = true
-axis_lock_angular_x = true
-axis_lock_angular_y = true
+nodes/node_a = NodePath("../Platform_03")
+nodes/node_b = NodePath("Platform_04")
 
-[node name="XY-Rotate_exp" type="MeshInstance" parent="Elements/Room1-Platforms/Platform_04"]
+[node name="Platform_04" type="RigidBody" parent="Elements/Room1-Platforms/HingeJoint"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.76837e-07, 0 )
+mass = 10.0
+custom_integrator = true
+continuous_cd = true
+can_sleep = false
+angular_damp = 5.0
+
+[node name="XY-Rotate_exp" type="MeshInstance" parent="Elements/Room1-Platforms/HingeJoint/Platform_04"]
 transform = Transform( -6.55671e-08, 0, 1.2, 0, 1.2, 0, -1.5, 0, -5.24537e-08, 0, 0, 0 )
 mesh = SubResource( 7 )
 material/0 = ExtResource( 5 )
 
-[node name="CollisionShape3" type="CollisionShape" parent="Elements/Room1-Platforms/Platform_04"]
+[node name="CollisionShape3" type="CollisionShape" parent="Elements/Room1-Platforms/HingeJoint/Platform_04"]
 transform = Transform( -6.55671e-08, 0, 1.2, 0, 1.2, 0, -1.5, 0, -5.24537e-08, 0, 0, 0 )
 shape = SubResource( 8 )
 
-[node name="CollisionShape2" type="CollisionShape" parent="Elements/Room1-Platforms/Platform_04"]
+[node name="CollisionShape2" type="CollisionShape" parent="Elements/Room1-Platforms/HingeJoint/Platform_04"]
 transform = Transform( 3.98147e-14, 1.95505e-07, 1.2, 1.5, -1.95505e-07, 0, 2.44381e-07, 1.2, -1.95505e-07, 0, 4.76837e-06, 0 )
 shape = SubResource( 9 )
 
@@ -324,7 +321,7 @@ shape = SubResource( 16 )
 
 [node name="BounceTest" type="StaticBody" parent="Elements/Room3-Terrain"]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 15.1637, -0.0719948, 27.3379 )
-physics_material_override = SubResource( 38 )
+physics_material_override = SubResource( 14 )
 
 [node name="MeshInstance" type="MeshInstance" parent="Elements/Room3-Terrain/BounceTest"]
 material_override = ExtResource( 2 )
@@ -480,7 +477,7 @@ __meta__ = {
 }
 
 [node name="Turnstile" type="StaticBody" parent="Elements/Room6-Turnstile"]
-transform = Transform( -0.648964, 0, -0.760818, 0, 1, 0, 0.760818, 0, -0.648964, 4.76971, -4.84551, 6.62205 )
+transform = Transform( -0.609261, 0, -0.792969, 0, 1, 0, 0.792969, 0, -0.609261, 4.76971, -4.84551, 6.62205 )
 script = SubResource( 33 )
 rotation_speed = 2.0
 

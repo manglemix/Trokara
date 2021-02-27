@@ -3,10 +3,6 @@ class_name Character3D
 extends KinematicBody
 
 
-# Used in main movement code when colliding
-# Basically its the threshold used to determine when not to recalculate the travel_vector when sliding against surfaces
-const SLIDE_DOT_THRESHOLD := sin(deg2rad(2))
-
 # emitted when this node contacts a floor or a slope; vertical_speed is the speed along the up_vector at the moment of collision
 signal landed(vertical_speed)
 
@@ -26,8 +22,16 @@ export(float, 0, 180) var floor_max_angle_degrees := 45.0 setget set_floor_max_a
 # there are few reasons to disable this, one of them is for performance
 export var track_wall := true
 
-# The max number of slides that can occur within a frame (analagous to move_and_slide max_slides)
-export var max_slides := 4
+# The max number of slides (changes to velocity) that can occur in a frame (used in the move_and_slide implementation)
+export var max_slides := 8
+
+# If true, will push RigidBodies aside as if they didn't exist
+# Otherwise, proper RigidBody support will occur (where the Character can push them or weigh them down)
+export var infinite_inertia := false
+
+# The mass used when calculating Character & RigidBody interactions
+# Only useful if infinite_inertia is false
+export var mass := 5.0
 
 # the radian counterpart
 var floor_max_angle := PI / 4 setget set_floor_max_angle
@@ -48,6 +52,7 @@ var down_vector: Vector3 = ProjectSettings.get_setting("physics/3d/default_gravi
 var up_vector: Vector3 = - down_vector setget set_up_vector
 
 # the acceleration at which this node descends at
+# IMPORTANT NOTE, this is the acceleration AFTER gravity_factor has been applied
 var gravity_acceleration: float = ProjectSettings.get_setting("physics/3d/default_gravity") setget set_gravity_acceleration
 
 var floor_velocity: Vector3
@@ -168,7 +173,7 @@ func get_floor_velocity() -> Vector3:
 	return floor_velocity
 
 
-func get_slide_collision(idx: int) -> KinematicCollision:
+func get_slide_collision(_idx: int) -> KinematicCollision:
 	# Since we don't use move_and_slide, there should be no use of this
 	push_warning("Attempted to use unimplemented method get_slide_collision in Character")
 	return null
@@ -239,28 +244,30 @@ func _physics_process(delta: float):
 	# and for some reason had a bug when nearing the max floor angle, which caused this node to randomly shoot upwards at high speeds
 	# also, if there was any side to side movement on a slope, move_and_slide_and_snap would cause this node to drift downards
 	# the following is an alternative to move_and_slide, with extra functionality to avoid many inconsistencies in the physics engine
-	for _slide_count in range(max_slides):
+	for slide_count in range(max_slides):
 		var friction_factor := 1.0
 		
 		if is_sliding_on_floor:
+			# Check for friction on the floor
 			var collider := floor_collision.collider
 			
 			if "physics_material_override" in collider and collider.physics_material_override != null:
 				friction_factor = 1 - collider.physics_material_override.friction
 		
 		if is_sliding_on_wall:
+			# Check for friction on the wall
 			var collider := wall_collision.collider
 			
 			# (_slide_count != 0 or travel_vector.normalized().dot(wall_collision.normal) < 0) is to remove a bug where
 			# if the friction is 1, track_wall is true, and the character is moving away from the wall,
 			# the character will still be stuck to the wall
-			if (_slide_count != 0 or travel_vector.normalized().dot(wall_collision.normal) < 0) and "physics_material_override" in collider and collider.physics_material_override != null:
+			if (slide_count != 0 or travel_vector.normalized().dot(wall_collision.normal) < 0) and "physics_material_override" in collider and collider.physics_material_override != null:
 				friction_factor *= 1 - collider.physics_material_override.friction
 		
 		if is_zero_approx(friction_factor) or is_zero_approx(travel_vector.length()):
 			break
 		
-		var collision = move_and_collide(travel_vector * friction_factor)
+		var collision = move_and_collide(travel_vector * friction_factor, infinite_inertia)
 		
 		if collision == null:
 			break
@@ -270,13 +277,14 @@ func _physics_process(delta: float):
 			collision = CollisionData3D.new(collision, self)
 			collision.travel /= friction_factor
 			
+			if not infinite_inertia and collision.collider is RigidBody and (not is_sliding_on_floor or (not is_sliding_on_wall and floor_collision.collider != collision.collider)):
+				collision.collider.apply_impulse(collision.position - collision.collider.global_transform.origin, linear_velocity.project(collision.normal) * mass * delta)
+			
 			if collision.normal.angle_to(up_vector) < floor_max_angle:
+				# FLOOR COLLISION HANDLING
 				floor_collision = collision
-				
-				if abs(travel_vector.normalized().dot(collision.normal)) < SLIDE_DOT_THRESHOLD:
-					travel_vector -= collision.travel
 					
-				elif is_sliding_on_floor:
+				if is_sliding_on_floor:
 					# If moving on a floor, and we hit another floor, rotate the movement_vector towards the up_vector such that the new vector is along the floor plane
 					# This is better than just sliding the movement_vector as that can be deflected to the side
 					var new_vector := up_vector.cross(travel_vector).cross(collision.normal).normalized()
@@ -302,21 +310,17 @@ func _physics_process(delta: float):
 						travel_vector = (travel_vector - collision.travel).slide(collision.normal)
 			
 			else:
+				# WALL COLLISION HANDLING
 				if not is_sliding_on_wall:
 					is_sliding_on_wall = true
 					emit_signal("touched_wall", linear_velocity.project(collision.normal))
 				
 				wall_collision = collision
 				
-				if abs(travel_vector.normalized().dot(collision.normal)) < SLIDE_DOT_THRESHOLD:
-					# There is a small bug in godot where even if you move exactly perpendicular to the wall normal,
-					# You can still collide with it. If that's the case, just ignore that collision
-					travel_vector -= collision.travel
-					
-				elif is_sliding_on_floor:
+				if is_sliding_on_floor and not _impulsing:
 					# if we're on a floor, and we hit a wall, we correct the new movement_vector so that it doesn't move up the wall
 					# such is the case for steep walls
-					global_transform.origin -= collision.travel
+					travel_vector -= collision.travel
 					var corrected_normal: Vector3 = collision.normal.slide(up_vector).normalized()
 					travel_vector = (travel_vector.slide(up_vector).normalized() * travel_vector.length()).slide(corrected_normal)
 					linear_velocity = (linear_velocity.slide(up_vector).normalized() * linear_velocity.length()).slide(corrected_normal)
@@ -345,7 +349,6 @@ func _physics_process(delta: float):
 
 		if was_on_floor:
 			if _impulsing:
-				print("lol")
 				linear_velocity += floor_velocity
 				floor_velocity = Vector3.ZERO
 			
@@ -358,7 +361,7 @@ func _physics_process(delta: float):
 				if is_on_wall():
 					test_vector = test_vector.slide(wall_collision.normal).normalized()
 
-				var collision := move_and_collide(test_vector * snap_distance, true, true, true)
+				var collision := move_and_collide(test_vector * snap_distance, infinite_inertia, true, true)
 
 				# if there was no floor, and we used the last floor normal, check downwards
 				if has_hit_floor and collision == null:
@@ -368,7 +371,7 @@ func _physics_process(delta: float):
 					else:
 						test_vector = down_vector
 					
-					collision = move_and_collide(test_vector * snap_distance, true, true, true)
+					collision = move_and_collide(test_vector * snap_distance, infinite_inertia, true, true)
 
 				# if it is a floor, move down to it and align the linear velocity to it
 				if collision != null and collision.normal.angle_to(up_vector) < floor_max_angle:
@@ -388,10 +391,10 @@ func _physics_process(delta: float):
 		var collision: KinematicCollision
 		
 		if is_on_floor():
-			collision = move_and_collide(- last_wall_collision.normal.slide(floor_collision.normal).normalized() * get("collision/safe_margin"), true, true, true)
+			collision = move_and_collide(- last_wall_collision.normal.slide(floor_collision.normal).normalized() * get("collision/safe_margin"), infinite_inertia, true, true)
 		
 		else:
-			collision = move_and_collide(- last_wall_collision.normal * get("collision/safe_margin"), true, true, true)
+			collision = move_and_collide(- last_wall_collision.normal * get("collision/safe_margin"), infinite_inertia, true, true)
 		
 		if collision != null:
 			if collision.normal.angle_to(up_vector) <= floor_max_angle:
@@ -402,6 +405,9 @@ func _physics_process(delta: float):
 	
 	if is_on_floor():
 		last_floor_collision = floor_collision
+		
+		if not infinite_inertia and floor_collision.collider is RigidBody:
+			floor_collision.collider.apply_impulse(floor_collision.position - floor_collision.collider.global_transform.origin, down_vector * mass * gravity_acceleration * delta)
 	
 	else:
 		linear_velocity += down_vector * gravity_acceleration * delta

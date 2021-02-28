@@ -147,6 +147,7 @@ func temporary_unsnap() -> void:
 	# Call this method before changing linear_velocity if the character is on the floor
 	# this ensures that you can jump without remaining snapped
 	_impulsing = true
+	floor_collision = null
 
 
 func _integrate_movement(vector: Vector3, _delta: float) -> Vector3:
@@ -294,20 +295,19 @@ func _physics_process(delta: float):
 				else:
 					# if we weren't on a floor, emit the landed signal
 					is_sliding_on_floor = true
-					emit_signal("landed", linear_velocity.dot(up_vector))
-					
-					if not is_sliding_on_floor:
-						# There could be no floor because as soon as we land we jump
-						pass
+					var vertical_speed := linear_velocity.dot(up_vector)
 					
 					# check for bounce
-					elif "physics_material_override" in collision.collider and collision.collider.physics_material_override != null:
+					if "physics_material_override" in collision.collider and collision.collider.physics_material_override != null:
 						travel_vector = _handle_bounce(collision, travel_vector)
 					
 					else:
 						# otherwise just slide against the floor here
 						linear_velocity = linear_velocity.slide(collision.normal)
 						travel_vector = (travel_vector - collision.travel).slide(collision.normal)
+					
+					emit_signal("landed", vertical_speed)
+					is_sliding_on_floor = is_on_floor()
 			
 			else:
 				# WALL COLLISION HANDLING
@@ -348,11 +348,7 @@ func _physics_process(delta: float):
 		floor_collision = null
 
 		if was_on_floor:
-			if _impulsing:
-				linear_velocity += floor_velocity
-				floor_velocity = Vector3.ZERO
-			
-			else:
+			if not _impulsing:
 				# this is the adaptive floor snapping
 				# checks in the direction of the last floor first
 				var has_hit_floor := last_floor_collision != null

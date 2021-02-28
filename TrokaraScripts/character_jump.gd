@@ -43,6 +43,9 @@ export var floor_angle_factor := 0.5
 # also allows jumps to reset on slopes
 export var jump_off_wall := false
 
+# if true, the velocity of the floor the character is on will be added to the linear velocity when jumping
+export var include_floor_velocity := true
+
 # The velocity applied on the initial jump
 var initial_speed: float setget set_initial_speed
 
@@ -193,6 +196,9 @@ func set_jumping(value: bool) -> void:
 			
 			if deform_to_movement:
 				character.linear_velocity += character.movement_vector.slide(up_vector).normalized() * character.movement_vector.length() * deformation_factor
+			
+			if include_floor_velocity:
+				character.linear_velocity += character.floor_velocity
 			
 			current_jump_time = jump_time
 			emit_signal("jumped")

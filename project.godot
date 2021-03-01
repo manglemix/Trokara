@@ -47,7 +47,7 @@ _global_script_classes=[ {
 "base": "CharacterJump",
 "class": "ControllableCharacterJump",
 "language": "GDScript",
-"path": "res://TrokaraScripts/controllable_character_jump.gd"
+"path": "res://TrokaraScripts/legacy/controllable_character_jump.gd"
 }, {
 "base": "CharacterMovement2D",
 "class": "ControllableCharacterMovement2D",
@@ -57,7 +57,7 @@ _global_script_classes=[ {
 "base": "PivotPoint",
 "class": "ControllablePivot",
 "language": "GDScript",
-"path": "res://TrokaraScripts/3D/controllable_pivot.gd"
+"path": "res://TrokaraScripts/legacy/controllable_pivot.gd"
 }, {
 "base": "Node",
 "class": "CopyBasis",
@@ -77,7 +77,7 @@ _global_script_classes=[ {
 "base": "Node",
 "class": "MovementInput",
 "language": "GDScript",
-"path": "res://TrokaraScripts/3D/movement_input.gd"
+"path": "res://TrokaraScripts/legacy/movement_input.gd"
 }, {
 "base": "Spatial",
 "class": "PivotPoint",
@@ -92,7 +92,7 @@ _global_script_classes=[ {
 "base": "KinematicArm",
 "class": "ScrollableKinematicArm",
 "language": "GDScript",
-"path": "res://TrokaraScripts/3D/scrollable_kinematic_arm.gd"
+"path": "res://TrokaraScripts/scrollable_kinematic_arm.gd"
 }, {
 "base": "Control",
 "class": "VelocityMeter",
@@ -135,26 +135,31 @@ settings/stdout/print_fps=true
 "move forward"={
 "deadzone": 0.5,
 "events": [ Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"alt":false,"shift":false,"control":false,"meta":false,"command":false,"pressed":false,"scancode":87,"unicode":0,"echo":false,"script":null)
+, Object(InputEventJoypadMotion,"resource_local_to_scene":false,"resource_name":"","device":0,"axis":1,"axis_value":-1.0,"script":null)
  ]
 }
 "move backward"={
 "deadzone": 0.5,
 "events": [ Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"alt":false,"shift":false,"control":false,"meta":false,"command":false,"pressed":false,"scancode":83,"unicode":0,"echo":false,"script":null)
+, Object(InputEventJoypadMotion,"resource_local_to_scene":false,"resource_name":"","device":0,"axis":1,"axis_value":1.0,"script":null)
  ]
 }
 "move left"={
 "deadzone": 0.5,
 "events": [ Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"alt":false,"shift":false,"control":false,"meta":false,"command":false,"pressed":false,"scancode":65,"unicode":0,"echo":false,"script":null)
+, Object(InputEventJoypadMotion,"resource_local_to_scene":false,"resource_name":"","device":0,"axis":0,"axis_value":-1.0,"script":null)
  ]
 }
 "move right"={
 "deadzone": 0.5,
 "events": [ Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"alt":false,"shift":false,"control":false,"meta":false,"command":false,"pressed":false,"scancode":68,"unicode":0,"echo":false,"script":null)
+, Object(InputEventJoypadMotion,"resource_local_to_scene":false,"resource_name":"","device":0,"axis":0,"axis_value":1.0,"script":null)
  ]
 }
 sprint={
 "deadzone": 0.5,
 "events": [ Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"alt":false,"shift":false,"control":false,"meta":false,"command":false,"pressed":false,"scancode":16777237,"unicode":0,"echo":false,"script":null)
+, Object(InputEventJoypadMotion,"resource_local_to_scene":false,"resource_name":"","device":0,"axis":6,"axis_value":1.0,"script":null)
  ]
 }
 walk={

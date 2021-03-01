@@ -21,7 +21,6 @@ export var sticky_parent := false	# if true, the fallback_node will always try t
 
 var fallback_node: Spatial setget set_fallback_node 		# the node which excess rotation from this node will be dumped onto
 var _fallback_is_pivot: bool								# True if the fallback_node is a PivotPoint
-var _target_transform: Transform
 
 onready var _initial_transform := transform
 
@@ -51,25 +50,6 @@ func biaxial_rotate_vector(xy: Vector2) -> void:
 func get_relative_transform() -> Transform:
 	# finds the transform relative to the _initial_transform
 	return transform * _initial_transform.affine_inverse()
-
-
-func turn_to_vector(rel_vec: Vector3):
-	global_turn_to_vector(rel_vec + global_transform.origin)
-
-
-func global_turn_to_vector(position: Vector3):
-	_target_transform = global_transform.looking_at(position, fallback_node.global_transform.basis.y)
-	_target_transform = _target_transform.rotated(_target_transform.basis.y, PI)
-	set_process(true)
-
-
-func _process(delta):
-	# This will interpolate the node to turn to a target
-	_target_transform.origin = global_transform.origin
-	global_transform = global_transform.interpolate_with(_target_transform, turn_speed * delta)
-
-	if global_transform.basis.tdotz(_target_transform.basis.z) >= 0.99:
-		set_process(false)
 
 
 func _physics_process(_delta):

@@ -12,11 +12,7 @@ extends Spatial
 const FPS := preload(\"res://Gobot/fps_demo.tscn\")
 const TPS := preload(\"res://Gobot/tps_demo.tscn\")
 
-var pivot_node: ControllablePivot
-
-
-func _ready():
-	pivot_node = get_tree().get_nodes_in_group(\"PivotNode\")[0]
+onready var player: Character3D = get_tree().get_nodes_in_group(\"Player\")[0]
 
 
 func _input(event):
@@ -27,10 +23,10 @@ func _input(event):
 		OS.window_fullscreen = not OS.window_fullscreen
 	
 	elif event.is_action_pressed(\"mouse lock\"):
-		pivot_node.accept_input = not pivot_node.accept_input
+		player.mouse_lock = not player.mouse_lock
 	
 	elif event is InputEventMouseButton and event.button_index == BUTTON_LEFT:
-		pivot_node.accept_input = true
+		player.mouse_lock = true
 	
 	elif event.is_action_pressed(\"fps\") and has_node(\"TPSDemo\"):
 		var fps: Spatial = FPS.instance()

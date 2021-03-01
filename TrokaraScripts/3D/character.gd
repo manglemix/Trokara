@@ -268,6 +268,7 @@ func _physics_process(delta: float):
 		if is_zero_approx(friction_factor) or is_zero_approx(travel_vector.length()):
 			break
 		
+		print(infinite_inertia)
 		var collision = move_and_collide(travel_vector * friction_factor, infinite_inertia)
 		
 		if collision == null:
@@ -279,6 +280,7 @@ func _physics_process(delta: float):
 			collision.travel /= friction_factor
 			
 			if not infinite_inertia and collision.collider is RigidBody and (not is_sliding_on_floor or (not is_sliding_on_wall and floor_collision.collider != collision.collider)):
+				print((linear_velocity.project(collision.normal) * mass * delta).length())
 				collision.collider.apply_impulse(collision.position - collision.collider.global_transform.origin, linear_velocity.project(collision.normal) * mass * delta)
 			
 			if collision.normal.angle_to(up_vector) < floor_max_angle:

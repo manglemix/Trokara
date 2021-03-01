@@ -9,20 +9,15 @@
 config_version=4
 
 _global_script_classes=[ {
-"base": "AnimationTree",
-"class": "BasicAnimator",
-"language": "GDScript",
-"path": "res://TrokaraScripts/AnimationTrees/basic_animator.gd"
-}, {
-"base": "KinematicBody",
-"class": "Character",
-"language": "GDScript",
-"path": "res://TrokaraScripts/3D/character.gd"
-}, {
 "base": "KinematicBody2D",
 "class": "Character2D",
 "language": "GDScript",
 "path": "res://TrokaraScripts/2D/character2d.gd"
+}, {
+"base": "KinematicBody",
+"class": "Character3D",
+"language": "GDScript",
+"path": "res://TrokaraScripts/3D/character.gd"
 }, {
 "base": "Node",
 "class": "CharacterJump",
@@ -30,16 +25,11 @@ _global_script_classes=[ {
 "path": "res://TrokaraScripts/character_jump.gd"
 }, {
 "base": "Node",
-"class": "CharacterMovement",
-"language": "GDScript",
-"path": "res://TrokaraScripts/3D/character_movement.gd"
-}, {
-"base": "Node",
 "class": "CharacterMovement2D",
 "language": "GDScript",
 "path": "res://TrokaraScripts/2D/character_movement_2d.gd"
 }, {
-"base": "Character",
+"base": "Character3D",
 "class": "ClassicCharacter",
 "language": "GDScript",
 "path": "res://TrokaraScripts/3D/classic_character.gd"
@@ -49,15 +39,15 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://TrokaraScripts/2D/classic_character_2d.gd"
 }, {
+"base": "Resource",
+"class": "CollisionData3D",
+"language": "GDScript",
+"path": "res://TrokaraScripts/3D/collison_data_3d.gd"
+}, {
 "base": "CharacterJump",
 "class": "ControllableCharacterJump",
 "language": "GDScript",
 "path": "res://TrokaraScripts/controllable_character_jump.gd"
-}, {
-"base": "CharacterMovement",
-"class": "ControllableCharacterMovement",
-"language": "GDScript",
-"path": "res://TrokaraScripts/3D/controllable_character_movement.gd"
 }, {
 "base": "CharacterMovement2D",
 "class": "ControllableCharacterMovement2D",
@@ -69,10 +59,25 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://TrokaraScripts/3D/controllable_pivot.gd"
 }, {
+"base": "Node",
+"class": "CopyBasis",
+"language": "GDScript",
+"path": "res://TrokaraScripts/3D/copy_basis.gd"
+}, {
+"base": "Node",
+"class": "FaceMovement",
+"language": "GDScript",
+"path": "res://TrokaraScripts/3D/face_movement.gd"
+}, {
 "base": "Spatial",
 "class": "KinematicArm",
 "language": "GDScript",
 "path": "res://TrokaraScripts/3D/kinematic_arm.gd"
+}, {
+"base": "Node",
+"class": "MovementInput",
+"language": "GDScript",
+"path": "res://TrokaraScripts/3D/movement_input.gd"
 }, {
 "base": "Spatial",
 "class": "PivotPoint",
@@ -89,34 +94,29 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://TrokaraScripts/3D/scrollable_kinematic_arm.gd"
 }, {
-"base": "Spatial",
-"class": "TransformReceiver",
-"language": "GDScript",
-"path": "res://LegacyScripts/transform_receiver.gd"
-}, {
 "base": "Control",
 "class": "VelocityMeter",
 "language": "GDScript",
 "path": "res://velocitymeter.gd"
 } ]
 _global_script_class_icons={
-"BasicAnimator": "",
-"Character": "",
 "Character2D": "",
+"Character3D": "",
 "CharacterJump": "",
-"CharacterMovement": "",
 "CharacterMovement2D": "",
 "ClassicCharacter": "",
 "ClassicCharacter2D": "",
+"CollisionData3D": "",
 "ControllableCharacterJump": "",
-"ControllableCharacterMovement": "",
 "ControllableCharacterMovement2D": "",
 "ControllablePivot": "",
+"CopyBasis": "",
+"FaceMovement": "",
 "KinematicArm": "",
+"MovementInput": "",
 "PivotPoint": "",
 "PointingNode": "",
 "ScrollableKinematicArm": "",
-"TransformReceiver": "",
 "VelocityMeter": ""
 }
 
@@ -175,6 +175,16 @@ fps={
 tps={
 "deadzone": 0.5,
 "events": [ Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"alt":false,"shift":false,"control":false,"meta":false,"command":false,"pressed":false,"scancode":50,"unicode":0,"echo":false,"script":null)
+ ]
+}
+fullscreen={
+"deadzone": 0.5,
+"events": [ Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"alt":false,"shift":false,"control":false,"meta":false,"command":false,"pressed":false,"scancode":16777254,"unicode":0,"echo":false,"script":null)
+ ]
+}
+"mouse lock"={
+"deadzone": 0.5,
+"events": [ Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"alt":false,"shift":false,"control":false,"meta":false,"command":false,"pressed":false,"scancode":16777240,"unicode":0,"echo":false,"script":null)
  ]
 }
 

@@ -4,7 +4,6 @@
 # Also, if sticky_parent is true, the fallback node will always try to rotate back to its original orientation while following the "head"
 # This is useful for forming chains such as Head -> Spine -> Player
 # As we humans naturally try to keep our spines aligned with our bodies, whilst also turning to help the head turn farther
-tool
 class_name PivotPoint
 extends Spatial
 
@@ -20,9 +19,9 @@ export var limit_yaw := false		# if true, excess rotation in the y axis will not
 export var sticky_parent := false	# if true, the fallback_node will always try to turn back to its original orientation
 
 var fallback_node: Spatial setget set_fallback_node 		# the node which excess rotation from this node will be dumped onto
-var _fallback_is_pivot: bool								# True if the fallback_node is a PivotPoint
 
-onready var _initial_transform := transform
+var _fallback_is_pivot: bool								# True if the fallback_node is a PivotPoint
+var _initial_transform: Transform
 
 
 func set_fallback_node(node: Spatial) -> void:
@@ -34,6 +33,7 @@ func set_fallback_node(node: Spatial) -> void:
 
 func _ready():
 	set_fallback_node(get_node(_fallback_node_path))
+	_initial_transform = global_transform * fallback_node.global_transform.affine_inverse()
 
 
 func biaxial_rotate(x: float, y: float) -> void:
@@ -49,7 +49,7 @@ func biaxial_rotate_vector(xy: Vector2) -> void:
 
 func get_relative_transform() -> Transform:
 	# finds the transform relative to the _initial_transform
-	return transform * _initial_transform.affine_inverse()
+	return global_transform * fallback_node.global_transform.affine_inverse() * _initial_transform.affine_inverse()
 
 
 func _physics_process(_delta):
@@ -86,23 +86,14 @@ func _physics_process(_delta):
 		if not limit_yaw:
 			fallback_node.rotate_object_local(Vector3.UP, deg2rad(euler_rotation.y - max_yaw))
 		
-		# counter rotation
-		global_rotate(fallback_node.global_transform.basis.y.normalized(), deg2rad(max_yaw - euler_rotation.y))
-		
 	elif euler_rotation.y < min_yaw:
 		if not limit_yaw:
 			fallback_node.rotate_object_local(Vector3.UP, deg2rad(euler_rotation.y - min_yaw))
-		
-		global_rotate(fallback_node.global_transform.basis.y.normalized(), deg2rad(min_yaw - euler_rotation.y))
 
 	if euler_rotation.x > max_pitch:
 		if not limit_pitch:
 			fallback_node.global_rotate(global_transform.basis.x.normalized(), deg2rad(euler_rotation.x - max_pitch))
 		
-		rotate_object_local(Vector3.RIGHT, deg2rad(max_pitch - euler_rotation.x))
-		
 	elif euler_rotation.x < min_pitch:
 		if not limit_pitch:
 			fallback_node.global_rotate(global_transform.basis.x.normalized(), deg2rad(euler_rotation.x - min_pitch))
-		
-		rotate_object_local(Vector3.RIGHT, deg2rad(min_pitch - euler_rotation.x))

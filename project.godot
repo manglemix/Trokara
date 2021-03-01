@@ -44,11 +44,6 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://TrokaraScripts/3D/collison_data_3d.gd"
 }, {
-"base": "CharacterJump",
-"class": "ControllableCharacterJump",
-"language": "GDScript",
-"path": "res://TrokaraScripts/legacy/controllable_character_jump.gd"
-}, {
 "base": "CharacterMovement2D",
 "class": "ControllableCharacterMovement2D",
 "language": "GDScript",
@@ -107,7 +102,6 @@ _global_script_class_icons={
 "ClassicCharacter": "",
 "ClassicCharacter2D": "",
 "CollisionData3D": "",
-"ControllableCharacterJump": "",
 "ControllableCharacterMovement2D": "",
 "ControllablePivot": "",
 "CopyBasis": "",

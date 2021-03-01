@@ -9,6 +9,10 @@ signal landed(vertical_speed)
 # emitted when this node hits a wall
 signal touched_wall(normal_velocity)
 
+# emitted before either landed or touched wall
+# Basically just a generic signal for any kind of collision
+signal body_entered(body)
+
 # multiplied with the project's gravity, useful for parachutes
 export var gravity_factor := 1.0 setget set_gravity_factor
 
@@ -307,6 +311,7 @@ func _physics_process(delta: float):
 						linear_velocity = linear_velocity.slide(collision.normal)
 						travel_vector = (travel_vector - collision.travel).slide(collision.normal)
 					
+					emit_signal("body_entered", collision.collider)
 					emit_signal("landed", vertical_speed)
 					is_sliding_on_floor = is_on_floor()
 			
@@ -314,6 +319,7 @@ func _physics_process(delta: float):
 				# WALL COLLISION HANDLING
 				if not is_sliding_on_wall:
 					is_sliding_on_wall = true
+					emit_signal("body_entered", collision.collider)
 					emit_signal("touched_wall", linear_velocity.project(collision.normal))
 				
 				wall_collision = collision

@@ -2,6 +2,7 @@ extends AnimationTree
 
 
 const MOVEMENT_TRANSITION_WEIGHT := 9.0
+const THRESHOLD := 0.1
 
 var _is_moving: bool
 var _state_playback: AnimationNodeStateMachinePlayback = get("parameters/playback")
@@ -27,7 +28,7 @@ func process_animation(delta: float, linear_velocity: Vector3, is_on_floor: bool
 	var speed := linear_velocity.length()
 	
 	if is_on_floor:
-		if is_zero_approx(speed):
+		if speed <= THRESHOLD:
 			_is_moving = false
 			_state_playback.travel("idle")
 		

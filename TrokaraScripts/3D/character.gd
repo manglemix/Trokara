@@ -268,7 +268,6 @@ func _physics_process(delta: float):
 		if is_zero_approx(friction_factor) or is_zero_approx(travel_vector.length()):
 			break
 		
-		print(infinite_inertia)
 		var collision = move_and_collide(travel_vector * friction_factor, infinite_inertia)
 		
 		if collision == null:

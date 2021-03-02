@@ -61,6 +61,8 @@ var gravity_acceleration: float = ProjectSettings.get_setting("physics/3d/defaul
 
 var floor_velocity: Vector3
 
+var last_floor_velocity: Vector3
+
 # contains information about the collision with a floor in each frame
 # floors are slopes whose incline is less than floor_max_angle
 var floor_collision: CollisionData3D
@@ -223,10 +225,12 @@ func _physics_process(delta: float):
 			floor_velocity = collider.global_transform.xform(_last_floor_transform.affine_inverse().xform(global_transform.origin)) - global_transform.origin
 			travel_vector += floor_velocity
 			floor_velocity /= delta
+			last_floor_velocity = floor_velocity
 			_last_floor_transform = collider.global_transform
 
 	else:
 		_last_floor = null
+		last_floor_velocity = floor_velocity
 	
 	if was_on_wall:
 		# wall special responses
@@ -283,7 +287,6 @@ func _physics_process(delta: float):
 			collision.travel /= friction_factor
 			
 			if not infinite_inertia and collision.collider is RigidBody and (not is_sliding_on_floor or (not is_sliding_on_wall and floor_collision.collider != collision.collider)):
-				print((linear_velocity.project(collision.normal) * mass * delta).length())
 				collision.collider.apply_impulse(collision.position - collision.collider.global_transform.origin, linear_velocity.project(collision.normal) * mass * delta)
 			
 			if collision.normal.angle_to(up_vector) < floor_max_angle:
@@ -317,11 +320,6 @@ func _physics_process(delta: float):
 			
 			else:
 				# WALL COLLISION HANDLING
-				if not is_sliding_on_wall:
-					is_sliding_on_wall = true
-					emit_signal("body_entered", collision.collider)
-					emit_signal("touched_wall", linear_velocity.project(collision.normal))
-				
 				wall_collision = collision
 				
 				if is_sliding_on_floor and not _impulsing:
@@ -340,6 +338,11 @@ func _physics_process(delta: float):
 					# otherwise just slide
 					linear_velocity = linear_velocity.slide(collision.normal)
 					travel_vector = (travel_vector - collision.travel).slide(collision.normal)
+				
+				if not is_sliding_on_wall:
+					is_sliding_on_wall = true
+					emit_signal("body_entered", collision.collider)
+					emit_signal("touched_wall", linear_velocity.project(collision.normal))
 	
 	# We check if the wall collision has been updated
 	# If it's not been updated, then no wall was hit

@@ -29,16 +29,18 @@ func _input(event):
 		player.mouse_lock = true
 	
 	elif event.is_action_pressed(\"fps\") and has_node(\"TPSDemo\"):
-		var fps: Spatial = FPS.instance()
-		add_child(fps)
-		fps.global_transform = $TPSDemo.global_transform
-		$TPSDemo.queue_free()
+		var new_player: Spatial = FPS.instance()
+		add_child(new_player)
+		new_player.global_transform = player.global_transform
+		player.queue_free()
+		player = new_player
 	
 	elif event.is_action_pressed(\"tps\") and has_node(\"FPSDemo\"):
-		var tps: Spatial = TPS.instance()
-		add_child(tps)
-		tps.global_transform = $FPSDemo.global_transform
-		$FPSDemo.queue_free()
+		var new_player: Spatial = TPS.instance()
+		add_child(new_player)
+		new_player.global_transform = player.global_transform
+		player.queue_free()
+		player = new_player
 	
 	elif event.is_action_pressed(\"ui_focus_next\"):
 		var img := get_viewport().get_texture().get_data()

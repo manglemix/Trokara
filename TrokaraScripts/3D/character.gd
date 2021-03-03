@@ -213,7 +213,8 @@ func _physics_process(delta: float):
 			rotation += collider.constant_angular_velocity * delta
 		
 		if "constant_linear_velocity" in collider:
-			travel_vector += collider.constant_linear_velocity * delta
+			floor_velocity = collider.constant_linear_velocity
+			travel_vector += floor_velocity * delta
 		
 		# This is where moving floors are handled
 		if _last_floor == null or collider != _last_floor:
@@ -222,9 +223,9 @@ func _physics_process(delta: float):
 
 		else:
 			# We compare the difference from the current position to where the current position should've been based on the last transform of the floor
-			floor_velocity = collider.global_transform.xform(_last_floor_transform.affine_inverse().xform(global_transform.origin)) - global_transform.origin
-			travel_vector += floor_velocity
-			floor_velocity /= delta
+			var moving_floor_velocity: Vector3 = collider.global_transform.xform(_last_floor_transform.affine_inverse().xform(global_transform.origin)) - global_transform.origin
+			travel_vector += moving_floor_velocity
+			floor_velocity += moving_floor_velocity / delta
 			last_floor_velocity = floor_velocity
 			_last_floor_transform = collider.global_transform
 

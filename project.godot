@@ -84,10 +84,10 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://TrokaraScripts/3D/pointing_node.gd"
 }, {
-"base": "KinematicArm",
+"base": "Reference",
 "class": "ScrollableKinematicArm",
 "language": "GDScript",
-"path": "res://TrokaraScripts/scrollable_kinematic_arm.gd"
+"path": "res://TrokaraScripts/legacy/scrollable_kinematic_arm.gd"
 }, {
 "base": "Control",
 "class": "VelocityMeter",

@@ -233,7 +233,7 @@ func _physics_process(delta: float):
 		_last_floor = null
 		last_floor_velocity = floor_velocity
 	
-	if was_on_wall and floor_collision.collider != null:
+	if was_on_wall and wall_collision.collider != null:
 		# wall special responses
 		var collider := wall_collision.collider
 		

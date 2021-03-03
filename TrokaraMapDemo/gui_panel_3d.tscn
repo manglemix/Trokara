@@ -2,7 +2,6 @@
 
 [ext_resource path="res://TrokaraMapDemo/gui_3d.gd" type="Script" id=1]
 
-
 [sub_resource type="QuadMesh" id=1]
 size = Vector2( 3, 2 )
 
@@ -43,10 +42,15 @@ margin_left = 44.0
 margin_top = 27.0
 margin_right = 121.0
 margin_bottom = 41.0
-text = "Controls:
-Move - WASD
-Camera - Mouse
-...."
+text = "Move - WASD or Joypad
+Camera - Mouse or Joypad
+Sprint - Shift or L2
+Walk - Ctrl
+fullscreen - F11
+mouse lock - Alt
+screenshot - Tab
+First Person - 1
+Third Person - 2"
 
 [node name="Quad" type="MeshInstance" parent="."]
 mesh = SubResource( 1 )

@@ -204,7 +204,7 @@ func _physics_process(delta: float):
 	var was_on_floor := is_on_floor()
 	var was_on_wall := is_on_wall()
 	
-	if was_on_floor:
+	if was_on_floor and floor_collision.collider != null:
 		# Here, special responses to floors are handled
 		# Any object which has constant_angular_velocity or constant_linear_velocity (such as StaticBody), will alter this node
 		var collider := floor_collision.collider
@@ -233,7 +233,7 @@ func _physics_process(delta: float):
 		_last_floor = null
 		last_floor_velocity = floor_velocity
 	
-	if was_on_wall:
+	if was_on_wall and floor_collision.collider != null:
 		# wall special responses
 		var collider := wall_collision.collider
 		

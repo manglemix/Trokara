@@ -192,6 +192,22 @@ func get_slide_count() -> int:
 	return 0
 
 
+func recheck_collisions() -> void:
+	if floor_collision != null and not is_instance_valid(floor_collision.collider):
+		floor_collision = null
+		linear_velocity += floor_velocity
+		floor_velocity = Vector3.ZERO
+	
+	if wall_collision != null and not is_instance_valid(wall_collision.collider):
+		wall_collision = null
+	
+	if last_floor_collision != null and not is_instance_valid(last_floor_collision.collider):
+		last_floor_collision = null
+	
+	if last_wall_collision != null and not is_instance_valid(last_wall_collision.collider):
+		last_wall_collision = null
+
+
 func _physics_process(delta: float):
 	# warning-ignore-all:return_value_discarded
 	linear_velocity = _integrate_movement(movement_vector, delta)
@@ -204,7 +220,7 @@ func _physics_process(delta: float):
 	var was_on_floor := is_on_floor()
 	var was_on_wall := is_on_wall()
 	
-	if was_on_floor and floor_collision.collider != null:
+	if was_on_floor:
 		# Here, special responses to floors are handled
 		# Any object which has constant_angular_velocity or constant_linear_velocity (such as StaticBody), will alter this node
 		var collider := floor_collision.collider
@@ -231,9 +247,8 @@ func _physics_process(delta: float):
 
 	else:
 		_last_floor = null
-		last_floor_velocity = floor_velocity
 	
-	if was_on_wall and wall_collision.collider != null:
+	if was_on_wall:
 		# wall special responses
 		var collider := wall_collision.collider
 		
@@ -286,6 +301,7 @@ func _physics_process(delta: float):
 			# We convert to CollisionData3D to make it mutable, and unique (otherwise additional calls to move_and_collide will modify previous instances of KinematicCollision)
 			collision = CollisionData3D.new(collision, self)
 			collision.travel /= friction_factor
+			collision.collider.connect("tree_exited", self, "recheck_collisions")
 			
 			if not infinite_inertia and collision.collider is RigidBody and (not is_sliding_on_floor or (not is_sliding_on_wall and floor_collision.collider != collision.collider)):
 				collision.collider.apply_impulse(collision.position - collision.collider.global_transform.origin, linear_velocity.project(collision.normal) * mass * delta)
@@ -317,7 +333,9 @@ func _physics_process(delta: float):
 					
 					emit_signal("body_entered", collision.collider)
 					emit_signal("landed", vertical_speed)
+					# we recheck both because the signals might trigger those objects to disappear
 					is_sliding_on_floor = is_on_floor()
+					is_sliding_on_wall = is_on_wall()
 			
 			else:
 				# WALL COLLISION HANDLING
@@ -344,6 +362,9 @@ func _physics_process(delta: float):
 					is_sliding_on_wall = true
 					emit_signal("body_entered", collision.collider)
 					emit_signal("touched_wall", linear_velocity.project(collision.normal))
+					# we recheck both because the signals might trigger those objects to disappear
+					is_sliding_on_floor = is_on_floor()
+					is_sliding_on_wall = is_on_wall()
 	
 	# We check if the wall collision has been updated
 	# If it's not been updated, then no wall was hit

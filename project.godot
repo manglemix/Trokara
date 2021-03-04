@@ -84,7 +84,7 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://TrokaraScripts/3D/pointing_node.gd"
 }, {
-"base": "Reference",
+"base": "KinematicArm",
 "class": "ScrollableKinematicArm",
 "language": "GDScript",
 "path": "res://TrokaraScripts/legacy/scrollable_kinematic_arm.gd"

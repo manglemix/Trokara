@@ -78,10 +78,10 @@ var _impulsing := false
 
 # The last floor collider node, used for following moving platforms
 # The difference from last_floor_collision is that this is refreshed each frame
-var _last_floor: Spatial
+var _last_floor_collider: Spatial
 
 # The last floor collider transform, used for following moving platforms
-var _last_floor_transform: Transform
+var _last_floor_collider_transform: Transform
 
 
 func set_floor_max_angle_degrees(value: float) -> void:
@@ -197,48 +197,58 @@ func _physics_process(delta: float):
 	
 	var was_on_floor := is_on_floor()
 	var was_on_wall := is_on_wall()
+	var is_sliding_on_floor := was_on_floor
+	var is_sliding_on_wall := was_on_wall
 	
 	if was_on_floor:
 		# Here, special responses to floors are handled
 		# Any object which has constant_angular_velocity or constant_linear_velocity (such as StaticBody), will alter this node
 		var collider := floor_collision.collider
 		
-		if "constant_angular_velocity" in collider:
-			rotation += collider.constant_angular_velocity * delta
-		
-		if "constant_linear_velocity" in collider:
-			travel_vector += collider.constant_linear_velocity * delta
-		
-		# This is where moving floors are handled
-		if _last_floor == null or collider != _last_floor:
-			_last_floor = collider
-			_last_floor_transform = collider.global_transform
+		if is_instance_valid(collider):
+			if "constant_angular_velocity" in collider:
+				rotation += collider.constant_angular_velocity * delta
+			
+			if "constant_linear_velocity" in collider:
+				floor_velocity = collider.constant_linear_velocity
+				travel_vector += floor_velocity * delta
+			
+			# This is where moving floors are handled
+			if _last_floor_collider == null or collider != _last_floor_collider:
+				_last_floor_collider = collider
+				_last_floor_collider_transform = collider.global_transform
 
+			else:
+				# We compare the difference from the current position to where the current position should've been based on the last transform of the floor
+				var moving_floor_velocity: Vector3 = collider.global_transform.xform(_last_floor_collider_transform.affine_inverse().xform(global_transform.origin)) - global_transform.origin
+				travel_vector += moving_floor_velocity
+				floor_velocity += moving_floor_velocity / delta
+				last_floor_velocity = floor_velocity
+				_last_floor_collider_transform = collider.global_transform
+		
 		else:
-			# We compare the difference from the current position to where the current position should've been based on the last transform of the floor
-			floor_velocity = collider.global_transform.xform(_last_floor_transform.affine_inverse().xform(global_transform.origin)) - global_transform.origin
-			travel_vector += floor_velocity
-			floor_velocity /= delta
-			_last_floor_transform = collider.global_transform
+			is_sliding_on_floor = false
+			floor_collision = null
+			_last_floor_collider = null
 
 	else:
-		_last_floor = null
+		_last_floor_collider = null
+		_impulsing = false
 	
 	if was_on_wall:
 		# wall special responses
 		var collider := wall_collision.collider
 		
-		if "constant_angular_velocity" in collider:
-			rotation += collider.constant_angular_velocity * delta
+		if is_instance_valid(collider):
+			if "constant_angular_velocity" in collider:
+				rotation += collider.constant_angular_velocity * delta
+			
+			if "constant_linear_velocity" in collider:
+				travel_vector += collider.constant_linear_velocity * delta
 		
-		if "constant_linear_velocity" in collider:
-			travel_vector += collider.constant_linear_velocity * delta
-	
-	var is_sliding_on_floor := was_on_floor
-	var is_sliding_on_wall := was_on_wall
-	
-	if not is_sliding_on_floor and _impulsing:
-		_impulsing = false
+		else:
+			is_sliding_on_wall = false
+			wall_collision = null
 	
 	# main movement code
 	# I stayed away from move_and_slide_and_snap as it caused this node to slide down slopes even if stop on slope was true (and there was downward velocity)

@@ -9,6 +9,10 @@ signal landed(vertical_speed)
 # emitted when this node hits a wall
 signal touched_wall(normal_velocity)
 
+# emitted before either landed or touched wall
+# Basically just a generic signal for any kind of collision
+signal body_entered(body)
+
 # multiplied with the project's gravity, useful for parachutes
 export var gravity_factor := 1.0 setget set_gravity_factor
 
@@ -56,6 +60,8 @@ var up_vector: Vector3 = - down_vector setget set_up_vector
 var gravity_acceleration: float = ProjectSettings.get_setting("physics/3d/default_gravity") setget set_gravity_acceleration
 
 var floor_velocity: Vector3
+
+var last_floor_velocity: Vector3
 
 # contains information about the collision with a floor in each frame
 # floors are slopes whose incline is less than floor_max_angle
@@ -184,6 +190,22 @@ func get_slide_count() -> int:
 	# Since we don't use move_and_slide, there should be no use of this
 	push_warning("Attempted to use unimplemented method get_slide_count in Character")
 	return 0
+
+
+func recheck_collisions() -> void:
+	if floor_collision != null and not is_instance_valid(floor_collision.collider):
+		floor_collision = null
+		linear_velocity += floor_velocity
+		floor_velocity = Vector3.ZERO
+	
+	if wall_collision != null and not is_instance_valid(wall_collision.collider):
+		wall_collision = null
+	
+	if last_floor_collision != null and not is_instance_valid(last_floor_collision.collider):
+		last_floor_collision = null
+	
+	if last_wall_collision != null and not is_instance_valid(last_wall_collision.collider):
+		last_wall_collision = null
 
 
 func _physics_process(delta: float):
@@ -316,15 +338,14 @@ func _physics_process(delta: float):
 						linear_velocity = linear_velocity.slide(collision.normal)
 						travel_vector = (travel_vector - collision.travel).slide(collision.normal)
 					
+					emit_signal("body_entered", collision.collider)
 					emit_signal("landed", vertical_speed)
+					# we recheck both because the signals might trigger those objects to disappear
 					is_sliding_on_floor = is_on_floor()
+					is_sliding_on_wall = is_on_wall()
 			
 			else:
 				# WALL COLLISION HANDLING
-				if not is_sliding_on_wall:
-					is_sliding_on_wall = true
-					emit_signal("touched_wall", linear_velocity.project(collision.normal))
-				
 				wall_collision = collision
 				
 				if is_sliding_on_floor and not _impulsing:
@@ -343,6 +364,14 @@ func _physics_process(delta: float):
 					# otherwise just slide
 					linear_velocity = linear_velocity.slide(collision.normal)
 					travel_vector = (travel_vector - collision.travel).slide(collision.normal)
+				
+				if not is_sliding_on_wall:
+					is_sliding_on_wall = true
+					emit_signal("body_entered", collision.collider)
+					emit_signal("touched_wall", linear_velocity.project(collision.normal))
+					# we recheck both because the signals might trigger those objects to disappear
+					is_sliding_on_floor = is_on_floor()
+					is_sliding_on_wall = is_on_wall()
 	
 	# We check if the wall collision has been updated
 	# If it's not been updated, then no wall was hit

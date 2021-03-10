@@ -3,7 +3,7 @@
 # Trokara
 A versatile and well documented package for developing terrestrial characters
 
-# IMPORTANT NOTICE
+## IMPORTANT NOTICE
 Trokara is undergoing an api_change. Most of the code will be refactored, and a few old functionalities will be removed, \
 while making way for new improvements. If you would like to see these changes, use the api_change branch. \
 Do note however, this branch is subject to many changes
@@ -42,20 +42,21 @@ The only thing which is different is the cameras, the scripts for which are also
 ## Features
 List of features ready and TODOs for future development
 * Improved floor snapping
-* Near zero deviance on slopes
+* ZERO deviance on complex terrain
 * Perfectly equal velocities on all slopes
-* Multi jumps, off of slopes, ramps and steep walls
+* Multi jumps off of slopes, ramps and steep walls
 * Smarter alternative to SpringArm (KinematicArm)
+* Slope resistance (you walk slower up steep hills)
+* Support for PhysicsMaterials (Bounce, friction)
+* Support for moving platforms (Translation, Rotation)
+* Support for constant_linear_velocity and constant_angular_velocity
 * Completely set up for inheritance and AI
 * Plenty of comments (feel free to contact me with any questions)
 * 100% GDscript; Source code fully available!
 
 Features currently being finalised!
-* ZERO deviance on complex terrain
 * Functioning Wall jumping
-* Support for PhysicsMaterials (Bounce, friction)
-* Support for moving platforms (Translation, Rotation)
-* Support for constant_linear_velocity and constant_angular_velocity
+* RigidBody platforms (interactions are already working)
 
 ## Status
 Project is: _in progress_ \

@@ -27,10 +27,10 @@ func _input(event):
 		OS.window_fullscreen = not OS.window_fullscreen
 	
 	elif event.is_action_pressed(\"mouse lock\"):
-		pivot_node.accept_input = not pivot_node.accept_input
+		pivot_node.mouse_lock = not pivot_node.mouse_lock
 	
 	elif event is InputEventMouseButton and event.button_index == BUTTON_LEFT:
-		pivot_node.accept_input = true
+		pivot_node.mouse_lock = true
 	
 	elif event.is_action_pressed(\"fps\") and has_node(\"TPSDemo\"):
 		var fps: Spatial = FPS.instance()

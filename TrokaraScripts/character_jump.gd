@@ -67,7 +67,8 @@ var max_deflection_angle := PI / 4 setget set_max_deflection_angle
 
 # True if the character jumped off the floor, until the character lands
 # needed to prevent the character from jumping multiple times within the coyote time
-var initial_jumped := false
+var initial_floor_jumped := false
+var initial_wall_jumped := false
 
 # current number of jumps
 onready var current_jumps := extra_jumps
@@ -139,76 +140,82 @@ func set_max_deflection_angle(value: float) -> void:
 
 
 func set_jumping(value: bool) -> void:
-	if value == jumping:
-		return
+	if value == jumping: return
 	
-	if value:
-		var system_time := OS.get_system_time_msecs()
-		
-		# if true, the floor can be jumped off of
-		var use_floor: bool = character.last_floor_collision != null and (system_time - character.last_floor_collision.collision_time) / 1000.0 <= coyote_time
-		
-		# if true, the character is still on a floor or wall, and hasn't jumped
-		var jump_off_surface: bool = not initial_jumped and \
-		(use_floor or jump_off_wall and character.last_wall_collision != null and (system_time - character.last_wall_collision.collision_time) / 1000.0 <= coyote_time)
-		
-		if jump_off_surface or current_jumps > 0:
-			var up_vector = character.up_vector if use_up_vector else character.global_transform.basis.y.normalized()
-			var initial_vector
-			
-			if jump_off_surface:
-				initial_jumped = true
-				
-				if use_floor_normal:
-					var normal
-					
-					if use_floor:
-						normal = character.last_floor_collision.normal.normalized()
-					
-					else:
-						normal = character.last_wall_collision.normal.normalized()
-					
-					var angle: float = abs(up_vector.angle_to(normal))
-					
-					if is_zero_approx(angle):
-						initial_vector = up_vector
-						
-					elif angle <= max_deflection_angle:
-						initial_vector = up_vector.slerp(normal, floor_angle_factor)
-					
-					else:
-						initial_vector = up_vector.slerp(normal, max_deflection_angle / angle * floor_angle_factor)
-				
-				else:
-					initial_vector = up_vector
-				
-			else:
-				initial_vector = up_vector
-				current_jumps -= 1
-			
-			character.temporary_unsnap()	# disable floor snapping
-			
-			if absolute_impulse:
-				character.linear_velocity = initial_speed * initial_vector
-			
-			else:
-				character.linear_velocity = character.linear_velocity.slide(up_vector) + initial_speed * initial_vector
-			
-			if deform_to_movement:
-				character.linear_velocity += character.movement_vector.slide(up_vector).normalized() * character.movement_vector.length() * deformation_factor
-			
-			if include_floor_velocity:
-				character.linear_velocity += character.floor_velocity
-			
-			current_jump_time = jump_time
-			emit_signal("jumped")
-			set_process(true)
-			jumping = true
-	
-	else:
+	if not value:
 		emit_signal("falling")
 		set_process(false)
 		jumping = false
+		return
+	
+	var system_time := OS.get_system_time_msecs()
+	
+	# if true, the floor can be jumped off of
+	var use_floor: bool = not initial_floor_jumped and \
+	character.last_floor_collision != null and \
+	(system_time - character.last_floor_collision.collision_time) / 1000.0 <= coyote_time
+	
+	# if true, the wall can be jumped off of
+	var use_wall: bool = jump_off_wall and not initial_wall_jumped and \
+	character.last_wall_collision != null and \
+	(system_time - character.last_wall_collision.collision_time) / 1000.0 <= coyote_time
+	
+	if (use_floor or use_wall) or current_jumps > 0:
+		var up_vector = character.up_vector if use_up_vector else character.global_transform.basis.y.normalized()
+		var initial_vector
+		
+		if use_floor or use_wall:
+			if use_floor:
+				initial_floor_jumped = true
+			
+			else:
+				initial_wall_jumped = true
+			
+			if use_floor_normal:
+				var normal
+				
+				if use_floor:
+					normal = character.last_floor_collision.normal.normalized()
+				
+				else:
+					normal = character.last_wall_collision.normal.normalized()
+				
+				var angle: float = abs(up_vector.angle_to(normal))
+				
+				if is_zero_approx(angle):
+					initial_vector = up_vector
+					
+				elif angle <= max_deflection_angle:
+					initial_vector = up_vector.slerp(normal, floor_angle_factor)
+				
+				else:
+					initial_vector = up_vector.slerp(normal, max_deflection_angle / angle * floor_angle_factor)
+			
+			else:
+				initial_vector = up_vector
+			
+		else:
+			initial_vector = up_vector
+			current_jumps -= 1
+		
+		character.temporary_unsnap()	# disable floor snapping
+		
+		if absolute_impulse:
+			character.linear_velocity = initial_speed * initial_vector
+		
+		else:
+			character.linear_velocity = character.linear_velocity.slide(up_vector) + initial_speed * initial_vector
+		
+		if deform_to_movement:
+			character.linear_velocity += character.movement_vector.slide(up_vector).normalized() * character.movement_vector.length() * deformation_factor
+		
+		if include_floor_velocity:
+			character.linear_velocity += character.floor_velocity
+		
+		current_jump_time = jump_time
+		emit_signal("jumped")
+		set_process(true)
+		jumping = true
 
 
 func _ready():
@@ -220,13 +227,14 @@ func _ready():
 
 func _handle_landed(_speed) -> void:
 	current_jumps = extra_jumps
-	initial_jumped = false
+	initial_floor_jumped = false
+	if jump_off_wall: initial_wall_jumped = false
 
 
 func _handle_touched_wall(_vec) -> void:
 	if jump_off_wall:
 		current_jumps = extra_jumps
-		initial_jumped = false
+		initial_wall_jumped = false
 
 
 func _process(delta):
